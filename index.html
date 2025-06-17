@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tela Preta - Editor de Código</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .editor-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .editor {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    .editor label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .editor textarea {
+      width: 100%;
+      min-height: 200px;
+      font-size: 16px;
+      font-family: 'Courier New', Courier, monospace;
+      resize: vertical;
+      border: 1px solid #ccc;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    .button-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #preview {
+      width: 100%;
+      min-height: 300px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    @media (min-width: 768px) {
+      .editor-container {
+        flex-direction: row;
+      }
+      .editor {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Tela Preta</h1>
+  <div class="editor-container">
+    <div class="editor">
+      <label for="html-editor">HTML</label>
+      <textarea id="html-editor" placeholder="Digite seu HTML aqui..."></textarea>
+    </div>
+    <div class="editor">
+      <label for="css-editor">CSS</label>
+      <textarea id="css-editor" placeholder="Digite seu CSS aqui..."></textarea>
+    </div>
+    <div class="editor">
+      <label for="js-editor">JavaScript</label>
+      <textarea id="js-editor" placeholder="Digite seu JavaScript aqui..."></textarea>
+    </div>
+  </div>
+  <div class="button-container">
+    <button id="save">Salvar Localmente</button>
+    <button id="export-html">Exportar HTML</button>
+    <button id="export-css">Exportar CSS</button>
+    <button id="export-js">Exportar JS</button>
+  </div>
+  <iframe id="preview"></iframe>
+
+  <script>
+    // Função para baixar arquivo
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Função para salvar no localStorage
+    function saveToLocalStorage() {
+      localStorage.setItem('html', document.getElementById('html-editor').value);
+      localStorage.setItem('css', document.getElementById('css-editor').value);
+      localStorage.setItem('js', document.getElementById('js-editor').value);
+      alert('Códigos salvos localmente!');
+    }
+
+    // Função para atualizar a visualização em tempo real
+    function updatePreview() {
+      const html = document.getElementById('html-editor').value;
+      const css = `<style>${document.getElementById('css-editor').value}</style>`;
+      const js = `<script>${document.getElementById('js-editor').value}<\/script>`;
+      const preview = document.getElementById('preview').contentWindow.document;
+      preview.open();
+      preview.write(html + css + js);
+      preview.close();
+    }
+
+    // Carregar códigos salvos do localStorage ao iniciar
+    window.onload = () => {
+      document.getElementById('html-editor').value = localStorage.getItem('html') || '';
+      document.getElementById('css-editor').value = localStorage.getItem('css') || '';
+      document.getElementById('js-editor').value = localStorage.getItem('js') || '';
+      updatePreview(); // Atualiza a visualização inicial
+    };
+
+    // Event listeners para os botões
+    document.getElementById('save').addEventListener('click', saveToLocalStorage);
+
+    document.getElementById('export-html').addEventListener('click', () => {
+      const htmlContent = document.getElementById('html-editor').value;
+      if (htmlContent.trim()) {
+        downloadFile(htmlContent, 'tela-preta.html', 'text/html');
+      } else {
+        alert('O campo HTML está vazio!');
+      }
+    });
+
+    document.getElementById('export-css').addEventListener('click', () => {
+      const cssContent = document.getElementById('css-editor').value;
+      if (cssContent.trim()) {
+        downloadFile(cssContent, 'tela-preta.css', 'text/css');
+      } else {
+        alert('O campo CSS está vazio!');
+      }
+    });
+
+    document.getElementById('export-js').addEventListener('click', () => {
+      const jsContent = document.getElementById('js-editor').value;
+      if (jsContent.trim()) {
+        downloadFile(jsContent, 'tela-preta.js', 'text/javascript');
+      } else {
+        alert('O campo JavaScript está vazio!');
+      }
+    });
+
+    // Atualizar visualização em tempo real ao digitar
+    document.querySelectorAll('textarea').forEach(textarea => {
+      textarea.addEventListener('input', updatePreview);
+    });
+  </script>
+</body>
+</html>
