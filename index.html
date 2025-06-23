@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Editor de código acessível criado pelo canal Euconcegojogar para programadores cegos e iniciantes.">
@@ -8,47 +8,86 @@
     <link rel="stylesheet" href="lib/codemirror/codemirror.min.css">
     <link rel="stylesheet" href="lib/codemirror/theme/monokai.min.css">
     <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <h1>Tela Preta</h1>
-        <p>Editor de Código Online do <a href="https://youtube.com/@euconcegojogar" aria-label="Canal Euconcegojogar no YouTube">Euconcegojogar</a></p>
+      <h1>Tela Preta</h1>
+      <p>Editor de Código Online do <a href="https://youtube.com/@euconcegojogar" aria-label="Canal Euconcegojogar no YouTube">Euconcegojogar</a></p>
     </header>
-    <div id="status" aria-live="polite" style="position: absolute; left: -9999px;"></div>
+    <div id="status" class="sr-only" aria-live="polite"></div>
     <main>
-        <section id="editor-section">
-            <div class="editor-container">
-                <label for="languageSelect">Linguagem:</label>
-                <select id="languageSelect" aria-label="Selecionar linguagem de programação" onchange="changeLanguage()">
-                    <option value="text/plain">Texto Simples</option>
-                    <option value="text/html">HTML</option>
-                    <option value="text/css">CSS</option>
-                    <option value="text/javascript">JavaScript</option>
-                    <option value="text/x-python">Python</option>
-                    <option value="text/x-csrc">C</option>
-                    <option value="text/markdown">Markdown</option>
-                </select>
-                <textarea id="codeEditor" tabindex="0"></textarea>
-            </div>
-            <div class="buttons">
-                <button onclick="saveCode()" aria-label="Salvar Código">Salvar</button>
-                <button onclick="exportCode()" aria-label="Exportar Código">Exportar</button>
-                <button onclick="resetCode()" aria-label="Resetar Código">Resetar</button>
-                <button onclick="toggleTheme()" aria-label="Alternar Tema">Tema</button>
-            </div>
-        </section>
-        <section id="preview-section">
-            <iframe id="preview" title="Visualização em tempo real"></iframe>
-        </section>
+      <section id="editor-section">
+        <div class="editor-container">
+          <label for="languageSelect">Linguagem:</label>
+          <select id="languageSelect" aria-label="Selecionar linguagem de programação" onchange="changeLanguage()">
+            <option value="text/plain">Texto Simples</option>
+            <option value="text/html">HTML</option>
+            <option value="text/css">CSS</option>
+            <option value="text/javascript">JavaScript</option>
+            <option value="text/x-python">Python</option>
+            <option value="text/x-csrc">C</option>
+            <option value="text/markdown">Markdown</option>
+            <option value="text/typescript">TypeScript</option>
+            <option value="text/x-sql">SQL</option>
+            <option value="text/x-java">Java</option>
+            <option value="text/x-kotlin">Kotlin</option>
+            <option value="application/x-httpd-php">PHP</option>
+          </select>
+          <textarea id="codeEditor" tabindex="0"></textarea>
+          <textarea id="codeFallback" aria-label="Editor de código alternativo" style="display: none;"></textarea>
+          <div id="validationErrors" aria-live="assertive"></div>
+        </div>
+        <div class="buttons">
+          <button onclick="saveCode()" aria-label="Salvar Código">Salvar</button>
+          <button onclick="exportCode()" aria-label="Exportar Código">Exportar</button>
+          <button onclick="exportMultipleFiles()" aria-label="Exportar Múltiplos Arquivos">Exportar Múltiplos</button>
+          <button onclick="openDownloadDialog()" aria-label="Baixar Arquivos">Baixar Arquivos</button>
+          <button onclick="loadFile()" aria-label="Carregar Arquivo">Carregar</button>
+          <button onclick="validateCode()" aria-label="Validar Código">Validar</button>
+          <button onclick="runCode()" aria-label="Executar Código">Executar</button>
+          <button onclick="resetCode()" aria-label="Resetar Código">Resetar</button>
+          <button onclick="toggleTheme()" aria-label="Alternar Tema">Tema</button>
+        </div>
+      </section>
+      <section id="preview-section">
+        <iframe id="preview" title="Visualização em tempo real"></iframe>
+        <div id="previewText" aria-live="polite" style="display: none;"></div>
+        <pre id="output" aria-live="polite" style="display: none;"></pre>
+      </section>
+      <dialog id="downloadDialog" role="dialog" aria-modal="true" aria-label="Baixar arquivos">
+        <form method="dialog">
+          <fieldset>
+            <legend>Selecionar arquivos para baixar</legend>
+            <label><input type="checkbox" name="files" value="index.html" checked> index.html</label>
+            <label><input type="checkbox" name="files" value="styles.css" checked> styles.css</label>
+            <label><input type="checkbox" name="files" value="scripts.js" checked> scripts.js</label>
+            <label><input type="checkbox" name="files" value="code.py" checked> code.py</label>
+            <label><input type="checkbox" name="files" value="code.c" checked> code.c</label>
+            <label><input type="checkbox" name="files" value="code.md" checked> code.md</label>
+            <label><input type="checkbox" name="files" value="code.ts" checked> code.ts</label>
+            <label><input type="checkbox" name="files" value="code.sql" checked> code.sql</label>
+            <label><input type="checkbox" name="files" value="Main.java" checked> Main.java</label>
+            <label><input type="checkbox" name="files" value="Main.kt" checked> Main.kt</label>
+            <label><input type="checkbox" name="files" value="index.php" checked> index.php</label>
+          </fieldset>
+          <button type="submit" aria-label="Confirmar download">Baixar</button>
+          <button type="button" onclick="document.getElementById('downloadDialog').close()" aria-label="Cancelar">Cancelar</button>
+        </form>
+      </dialog>
     </main>
-    <script src="lib/codemirror/codemirror.min.js"></script>
-    <script src="lib/codemirror/mode/xml/xml.min.js"></script>
-    <script src="lib/codemirror/mode/css/css.min.js"></script>
-    <script src="lib/codemirror/mode/javascript/javascript.min.js"></script>
-    <script src="lib/codemirror/mode/python/python.min.js"></script>
-    <script src="lib/codemirror/mode/clike/clike.min.js"></script>
-    <script src="lib/codemirror/mode/markdown/markdown.min.js"></script>
-    <script src="lib/jszip/jszip.min.js"></script>
-    <script src="scripts.js"></script>
-</body>
+    <script defer src="lib/codemirror/codemirror.min.js"></script>
+    <script defer src="lib/codemirror/mode/xml/xml.min.js"></script>
+    <script defer src="lib/codemirror/mode/css/css.min.js"></script>
+    <script defer src="lib/codemirror/mode/javascript/javascript.min.js"></script>
+    <script defer src="lib/codemirror/mode/python/python.min.js"></script>
+    <script defer src="lib/codemirror/mode/clike/clike.min.js"></script>
+    <script defer src="lib/codemirror/mode/markdown/markdown.min.js"></script>
+    <script defer src="lib/codemirror/mode/typescript/typescript.min.js"></script>
+    <script defer src="lib/codemirror/mode/sql/sql.min.js"></script>
+    <script defer src="lib/codemirror/mode/php/php.min.js"></script>
+    <script defer src="lib/jszip/jszip.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jshint/2.13.6/jshint.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script defer src="scripts.js"></script>
+  </body>
 </html>
