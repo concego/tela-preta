@@ -1,9 +1,21 @@
 # Changelog
 
+## [1.9.0] - 2025-06-25
+
+### Adicionado
+- Suporte a múltiplos editores, cada um com seleção de linguagem e botão “Selecionar” para definir o editor ativo.
+- Botão “Baixar como ZIP” para exportar o código do editor ativo com nome/caminho personalizado.
+- Botão “Adicionar Editor” para criar novos editores dinamicamente.
+- Estilos para múltiplos editores com destaque visual do editor ativo.
+
+### Removido
+- Botões “Exportar” e “Exportar Múltiplos”.
+
 ## [1.8.0] - 2025-06-23
 
 ### Adicionado
 - Suporte a PHP com validação, exportação (incluindo `composer.json`), e visualização acessível.
+- Campo para especificar nome/caminho do arquivo (ex.: `word/src/scripts.js`) no diálogo de download.
 
 ## [1.7.1] - 2025-06-23
 

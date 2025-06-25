@@ -28,11 +28,44 @@ const CONFIG = {
   }
 };
 
-let editor;
+let editors = [];
+let activeEditorIndex = 0;
 let isDarkTheme = true;
 
-function initializeEditor() {
-  editor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+function initializeEditors() {
+  const container = document.getElementById('editors-container');
+  addEditor(); // Adiciona o primeiro editor por padrão
+  loadSavedEditors();
+  document.addEventListener('keydown', handleShortcuts);
+}
+
+function addEditor() {
+  const editorId = editors.length;
+  const editorContainer = document.createElement('div');
+  editorContainer.className = 'editor-container';
+  editorContainer.innerHTML = `
+    <label for="languageSelect${editorId}">Linguagem do editor ${editorId + 1}:</label>
+    <select id="languageSelect${editorId}" aria-label="Selecionar linguagem do editor ${editorId + 1}" onchange="changeLanguage(${editorId})">
+      <option value="text/plain">Texto Simples</option>
+      <option value="text/html">HTML</option>
+      <option value="text/css">CSS</option>
+      <option value="text/javascript">JavaScript</option>
+      <option value="text/x-python">Python</option>
+      <option value="text/x-csrc">C</option>
+      <option value="text/markdown">Markdown</option>
+      <option value="text/typescript">TypeScript</option>
+      <option value="text/x-sql">SQL</option>
+      <option value="text/x-java">Java</option>
+      <option value="text/x-kotlin">Kotlin</option>
+      <option value="application/x-httpd-php">PHP</option>
+    </select>
+    <textarea id="codeEditor${editorId}" tabindex="0"></textarea>
+    <textarea id="codeFallback${editorId}" aria-label="Editor de código alternativo ${editorId + 1}" style="display: none;"></textarea>
+    <button onclick="selectEditor(${editorId})" aria-label="Selecionar editor ${editorId + 1} como ativo">Selecionar</button>
+    <div id="validationErrors${editorId}" aria-live="assertive"></div>
+  `;
+  document.getElementById('editors-container').appendChild(editorContainer);
+  const editor = CodeMirror.fromTextArea(document.getElementById(`codeEditor${editorId}`), {
     lineNumbers: true,
     mode: 'text/plain',
     theme: 'monokai',
@@ -40,15 +73,26 @@ function initializeEditor() {
     indentWithTabs: true
   });
   editor.on('change', debounce(() => {
-    updatePreview();
-    validateCode(true);
+    if (activeEditorIndex === editorId) {
+      updatePreview();
+      validateCode(true);
+    }
   }, 500));
-  loadSavedCode();
+  editors.push({ editor, language: 'text/plain' });
   if (navigator.userAgent.includes('TalkBack')) {
-    updateFallback(true);
+    updateFallback(editorId, true);
   }
-  loadSavedLanguage();
-  document.addEventListener('keydown', handleShortcuts);
+  setStatus(`Editor ${editorId + 1} adicionado`);
+}
+
+function selectEditor(index) {
+  activeEditorIndex = index;
+  setStatus(`Editor ${index + 1} selecionado como ativo`);
+  updatePreview();
+  validateCode(true);
+  document.querySelectorAll('.editor-container').forEach((container, i) => {
+    container.classList.toggle('active-editor', i === index);
+  });
 }
 
 function handleShortcuts(e) {
@@ -58,76 +102,69 @@ function handleShortcuts(e) {
   } else if (e.ctrlKey && e.key === 'v') {
     e.preventDefault();
     validateCode();
-  } else if (e.ctrlKey && e.key === 'e') {
+  } else if (e.ctrlKey && e.key === 'z') {
     e.preventDefault();
-    exportCode();
+    downloadAsZip();
   } else if (e.ctrlKey && e.key === 'k') {
     e.preventDefault();
-    if (document.getElementById('languageSelect').value === 'text/x-kotlin') {
+    if (document.getElementById(`languageSelect${activeEditorIndex}`).value === 'text/x-kotlin') {
       validateCode();
     }
   }
 }
 
-function updateFallback(show) {
-  const fallback = document.getElementById('codeFallback');
-  document.getElementById('codeEditor').style.display = show ? 'none' : 'block';
+function updateFallback(editorId, show) {
+  const fallback = document.getElementById(`codeFallback${editorId}`);
+  document.getElementById(`codeEditor${editorId}`).style.display = show ? 'none' : 'block';
   fallback.style.display = show ? 'block' : 'none';
   if (show) {
-    fallback.value = editor.getValue();
-    fallback.addEventListener('input', () => editor.setValue(fallback.value));
+    fallback.value = editors[editorId].editor.getValue();
+    fallback.addEventListener('input', () => editors[editorId].editor.setValue(fallback.value));
   }
 }
 
-function changeLanguage() {
-  const select = document.getElementById('languageSelect');
-  editor.setOption('mode', select.value);
-  localStorage.setItem('savedLanguage', select.value);
-  updatePreview();
-  setStatus(`Linguagem alterada para ${select.options[select.selectedIndex].text}`);
+function changeLanguage(editorId) {
+  const select = document.getElementById(`languageSelect${editorId}`);
+  editors[editorId].language = select.value;
+  editors[editorId].editor.setOption('mode', select.value);
+  localStorage.setItem(`savedLanguage${editorId}`, select.value);
+  if (activeEditorIndex === editorId) {
+    updatePreview();
+  }
+  setStatus(`Linguagem do editor ${editorId + 1} alterada para ${select.options[select.selectedIndex].text}`);
 }
 
 function saveCode() {
-  localStorage.setItem('savedCode', editor.getValue());
-  setStatus('Código salvo com sucesso');
+  const editor = editors[activeEditorIndex].editor;
+  localStorage.setItem(`savedCode${activeEditorIndex}`, editor.getValue());
+  setStatus(`Código do editor ${activeEditorIndex + 1} salvo com sucesso`);
 }
 
-function loadSavedCode() {
-  const savedCode = localStorage.getItem('savedCode');
-  if (savedCode) {
-    editor.setValue(savedCode);
-    if (navigator.userAgent.includes('TalkBack')) {
-      document.getElementById('codeFallback').value = savedCode;
+function loadSavedEditors() {
+  editors.forEach((_, index) => {
+    const savedCode = localStorage.getItem(`savedCode${index}`);
+    const savedLanguage = localStorage.getItem(`savedLanguage${index}`);
+    if (savedCode) {
+      editors[index].editor.setValue(savedCode);
+      if (navigator.userAgent.includes('TalkBack')) {
+        document.getElementById(`codeFallback${index}`).value = savedCode;
+      }
     }
-  }
-}
-
-function loadSavedLanguage() {
-  const savedLanguage = localStorage.getItem('savedLanguage');
-  if (savedLanguage) {
-    document.getElementById('languageSelect').value = savedLanguage;
-    editor.setOption('mode', savedLanguage);
-  }
-}
-
-function exportCode() {
-  const zip = new JSZip();
-  const code = editor.getValue();
-  const lang = document.getElementById('languageSelect').value;
-  const filename = ['text/x-kotlin', 'text/x-java'].includes(lang) ? `src/${CONFIG.languages[lang].file}` : CONFIG.languages[lang].file;
-  zip.file(filename, code);
-  downloadZip(zip, 'code.zip', 'Código exportado como ZIP');
-}
-
-function exportMultipleFiles() {
-  const zip = new JSZip();
-  const code = editor.getValue();
-  const lang = document.getElementById('languageSelect').value;
-  Object.keys(CONFIG.templates).forEach(file => {
-    const content = CONFIG.languages[lang]?.file === file ? code || CONFIG.templates[file] : CONFIG.templates[file];
-    const path = ['Main.kt', 'Main.java'].includes(file) ? `src/${file}` : file;
-    zip.file(path, content);
+    if (savedLanguage) {
+      document.getElementById(`languageSelect${index}`).value = savedLanguage;
+      editors[index].language = savedLanguage;
+      editors[index].editor.setOption('mode', savedLanguage);
+    }
   });
+}
+
+function downloadAsZip() {
+  const zip = new JSZip();
+  const filePathInput = document.getElementById('filePathInput').value.trim();
+  const lang = editors[activeEditorIndex].language;
+  const code = editors[activeEditorIndex].editor.getValue();
+  const filename = filePathInput || (['text/x-kotlin', 'text/x-java'].includes(lang) ? `src/${CONFIG.languages[lang].file}` : CONFIG.languages[lang].file);
+  zip.file(filename, code);
   if (lang === 'text/x-kotlin') {
     zip.file('build.gradle.kts', `plugins {\n  kotlin("jvm") version "1.9.0"\n}\nrepositories {\n  mavenCentral()\n}\ndependencies {\n  implementation(kotlin("stdlib"))\n}`);
   } else if (lang === 'text/x-java') {
@@ -135,24 +172,31 @@ function exportMultipleFiles() {
   } else if (lang === 'application/x-httpd-php') {
     zip.file('composer.json', `{\n  "name": "project",\n  "description": "Projeto PHP",\n  "require": {\n    "php": ">=7.4"\n  }\n}\n`);
   }
-  downloadZip(zip, 'project.zip', 'Arquivos múltiplos exportados como ZIP');
+  downloadZip(zip, 'project.zip', `Arquivos do editor ${activeEditorIndex + 1} exportados como ZIP`);
 }
 
 function openDownloadDialog() {
   const dialog = document.getElementById('downloadDialog');
+  const filePathInput = document.getElementById('filePathInput');
+  const lang = editors[activeEditorIndex].language;
+  filePathInput.value = CONFIG.languages[lang].file;
   dialog.showModal();
-  dialog.querySelector('input[name="files"]').focus();
+  filePathInput.focus();
   dialog.querySelector('form').onsubmit = e => {
     e.preventDefault();
-    const code = editor.getValue();
-    const lang = document.getElementById('languageSelect').value;
+    const code = editors[activeEditorIndex].editor.getValue();
+    const lang = editors[activeEditorIndex].language;
+    const filePath = filePathInput.value.trim();
     const files = Array.from(dialog.querySelectorAll('input[name="files"]:checked')).map(input => input.value);
     files.forEach(file => {
       const content = CONFIG.languages[lang]?.file === file ? code || CONFIG.templates[file] : CONFIG.templates[file];
       const path = ['Main.kt', 'Main.java'].includes(file) ? `src/${file}` : file;
       downloadFile(path, content);
     });
-    setStatus(`Arquivos ${files.join(', ')} baixados com sucesso`);
+    if (filePath) {
+      downloadFile(filePath, code);
+    }
+    setStatus(`Arquivos ${files.join(', ')} ${filePath ? 'e ' + filePath : ''} baixados com sucesso`);
     dialog.close();
   };
 }
@@ -188,18 +232,19 @@ function loadFile() {
     if (file) {
       const reader = new FileReader();
       reader.onload = event => {
-        editor.setValue(event.target.result);
+        editors[activeEditorIndex].editor.setValue(event.target.result);
         if (navigator.userAgent.includes('TalkBack')) {
-          document.getElementById('codeFallback').value = event.target.result;
+          document.getElementById(`codeFallback${activeEditorIndex}`).value = event.target.result;
         }
         const ext = file.name.split('.').pop();
         const lang = Object.keys(CONFIG.languages).find(key => CONFIG.languages[key].ext === ext);
         if (lang) {
-          document.getElementById('languageSelect').value = lang;
-          editor.setOption('mode', lang);
-          localStorage.setItem('savedLanguage', lang);
+          document.getElementById(`languageSelect${activeEditorIndex}`).value = lang;
+          editors[activeEditorIndex].language = lang;
+          editors[activeEditorIndex].editor.setOption('mode', lang);
+          localStorage.setItem(`savedLanguage${activeEditorIndex}`, lang);
         }
-        setStatus(`Arquivo ${file.name} carregado com sucesso`);
+        setStatus(`Arquivo ${file.name} carregado no editor ${activeEditorIndex + 1}`);
       };
       reader.readAsText(file);
     }
@@ -208,8 +253,8 @@ function loadFile() {
 }
 
 function runCode() {
-  const code = editor.getValue();
-  const lang = document.getElementById('languageSelect').value;
+  const code = editors[activeEditorIndex].editor.getValue();
+  const lang = editors[activeEditorIndex].language;
   const output = document.getElementById('output');
   output.style.display = 'block';
   if (lang === 'text/x-kotlin' || lang === 'text/x-java' || lang === 'application/x-httpd-php') {
@@ -219,7 +264,7 @@ function runCode() {
     try {
       const result = eval(code);
       output.textContent = result !== undefined ? String(result) : 'Executado com sucesso';
-      setStatus('Código executado com sucesso');
+      setStatus(`Código do editor ${activeEditorIndex + 1} executado com sucesso`);
     } catch (e) {
       output.textContent = `Erro: ${e.message}`;
       setStatus('Erro na execução');
@@ -370,8 +415,8 @@ function validatePHP(code) {
 }
 
 function validateCode(live = false) {
-  const code = editor.getValue();
-  const lang = document.getElementById('languageSelect').value;
+  const code = editors[activeEditorIndex].editor.getValue();
+  const lang = editors[activeEditorIndex].language;
   const validators = {
     'text/html': validateHTML,
     'text/css': validateCSS,
@@ -389,47 +434,49 @@ function validateCode(live = false) {
   if (!live) {
     displayValidationResult(errors);
   } else if (errors.length > 0) {
-    document.getElementById('validationErrors').textContent = errors.join(' ');
+    document.getElementById(`validationErrors${activeEditorIndex}`).textContent = errors.join(' ');
   } else {
-    document.getElementById('validationErrors').textContent = '';
+    document.getElementById(`validationErrors${activeEditorIndex}`).textContent = '';
   }
 }
 
 function displayValidationResult(errors) {
   const status = document.getElementById('status');
-  const validationErrors = document.getElementById('validationErrors');
+  const validationErrors = document.getElementById(`validationErrors${activeEditorIndex}`);
   if (errors.length === 0) {
-    status.textContent = 'Nenhum erro detectado no código.';
+    status.textContent = `Nenhum erro detectado no código do editor ${activeEditorIndex + 1}.`;
     validationErrors.textContent = '';
   } else {
-    status.textContent = 'Erros encontrados no código.';
+    status.textContent = `Erros encontrados no código do editor ${activeEditorIndex + 1}.`;
     validationErrors.textContent = errors.join(' ');
   }
 }
 
 function resetCode() {
-  editor.setValue('');
-  localStorage.removeItem('savedCode');
-  localStorage.removeItem('savedLanguage');
+  editors[activeEditorIndex].editor.setValue('');
+  localStorage.removeItem(`savedCode${activeEditorIndex}`);
+  localStorage.removeItem(`savedLanguage${activeEditorIndex}`);
   if (navigator.userAgent.includes('TalkBack')) {
-    document.getElementById('codeFallback').value = '';
+    document.getElementById(`codeFallback${activeEditorIndex}`).value = '';
   }
   updatePreview();
-  setStatus('Código resetado');
-  document.getElementById('validationErrors').textContent = '';
+  setStatus(`Código do editor ${activeEditorIndex + 1} resetado`);
+  document.getElementById(`validationErrors${activeEditorIndex}`).textContent = '';
 }
 
 function toggleTheme() {
   isDarkTheme = !isDarkTheme;
-  editor.setOption('theme', isDarkTheme ? 'monokai' : 'default');
+  editors.forEach(editor => {
+    editor.editor.setOption('theme', isDarkTheme ? 'monokai' : 'default');
+  });
   document.body.style.backgroundColor = isDarkTheme ? '#1e1e1e' : '#fff';
   document.body.style.color = isDarkTheme ? '#fff' : '#000';
   setStatus(`Tema alterado para ${isDarkTheme ? 'escuro' : 'claro'}`);
 }
 
 function updatePreview() {
-  const code = editor.getValue();
-  const lang = document.getElementById('languageSelect').value;
+  const code = editors[activeEditorIndex].editor.getValue();
+  const lang = editors[activeEditorIndex].language;
   const preview = document.getElementById('preview');
   const previewText = document.getElementById('previewText');
   try {
@@ -437,19 +484,19 @@ function updatePreview() {
       preview.contentDocument.open();
       preview.contentDocument.write(code);
       preview.contentDocument.close();
-      previewText.textContent = 'Visualização HTML renderizada no iframe.';
+      previewText.textContent = `Visualização HTML do editor ${activeEditorIndex + 1} renderizada no iframe.`;
     } else if (lang === 'text/markdown' && typeof marked !== 'undefined') {
       preview.contentDocument.body.innerHTML = marked.parse(code);
-      previewText.textContent = 'Visualização Markdown renderizada.';
+      previewText.textContent = `Visualização Markdown do editor ${activeEditorIndex + 1} renderizada.`;
     } else if (lang === 'application/x-httpd-php') {
       preview.contentDocument.body.innerText = code;
-      previewText.textContent = 'Código PHP com destaque de sintaxe (execução requer servidor).';
+      previewText.textContent = `Código PHP do editor ${activeEditorIndex + 1} com destaque de sintaxe (execução requer servidor).`;
     } else {
       preview.contentDocument.body.innerText = code;
-      previewText.textContent = CONFIG.languages[lang]?.name === 'Kotlin' ? 'Código Kotlin com destaque de sintaxe.' : CONFIG.languages[lang]?.name === 'Java' ? 'Código Java com destaque de sintaxe.' : code;
+      previewText.textContent = CONFIG.languages[lang]?.name === 'Kotlin' ? `Código Kotlin do editor ${activeEditorIndex + 1} com destaque de sintaxe.` : CONFIG.languages[lang]?.name === 'Java' ? `Código Java do editor ${activeEditorIndex + 1} com destaque de sintaxe.` : code;
     }
   } catch (e) {
-    setStatus(`Erro na visualização: ${e.message}`);
+    setStatus(`Erro na visualização do editor ${activeEditorIndex + 1}: ${e.message}`);
     previewText.textContent = `Erro: ${e.message}`;
   }
   if (navigator.userAgent.includes('TalkBack')) {
@@ -474,4 +521,4 @@ function debounce(func, wait) {
   };
 }
 
-window.onload = initializeEditor;
+window.onload = initializeEditors;

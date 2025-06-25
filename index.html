@@ -17,35 +17,18 @@
     <div id="status" class="sr-only" aria-live="polite"></div>
     <main>
       <section id="editor-section">
-        <div class="editor-container">
-          <label for="languageSelect">Linguagem:</label>
-          <select id="languageSelect" aria-label="Selecionar linguagem de programação" onchange="changeLanguage()">
-            <option value="text/plain">Texto Simples</option>
-            <option value="text/html">HTML</option>
-            <option value="text/css">CSS</option>
-            <option value="text/javascript">JavaScript</option>
-            <option value="text/x-python">Python</option>
-            <option value="text/x-csrc">C</option>
-            <option value="text/markdown">Markdown</option>
-            <option value="text/typescript">TypeScript</option>
-            <option value="text/x-sql">SQL</option>
-            <option value="text/x-java">Java</option>
-            <option value="text/x-kotlin">Kotlin</option>
-            <option value="application/x-httpd-php">PHP</option>
-          </select>
-          <textarea id="codeEditor" tabindex="0"></textarea>
-          <textarea id="codeFallback" aria-label="Editor de código alternativo" style="display: none;"></textarea>
-          <div id="validationErrors" aria-live="assertive"></div>
+        <div id="editors-container">
+          <!-- Editores serão adicionados dinamicamente via JavaScript -->
         </div>
+        <button onclick="addEditor()" aria-label="Adicionar novo editor">Adicionar Editor</button>
         <div class="buttons">
-          <button onclick="saveCode()" aria-label="Salvar Código">Salvar</button>
-          <button onclick="exportCode()" aria-label="Exportar Código">Exportar</button>
-          <button onclick="exportMultipleFiles()" aria-label="Exportar Múltiplos Arquivos">Exportar Múltiplos</button>
+          <button onclick="saveCode()" aria-label="Salvar Código do editor selecionado">Salvar</button>
+          <button onclick="downloadAsZip()" aria-label="Baixar como ZIP">Baixar como ZIP</button>
           <button onclick="openDownloadDialog()" aria-label="Baixar Arquivos">Baixar Arquivos</button>
-          <button onclick="loadFile()" aria-label="Carregar Arquivo">Carregar</button>
-          <button onclick="validateCode()" aria-label="Validar Código">Validar</button>
-          <button onclick="runCode()" aria-label="Executar Código">Executar</button>
-          <button onclick="resetCode()" aria-label="Resetar Código">Resetar</button>
+          <button onclick="loadFile()" aria-label="Carregar Arquivo no editor selecionado">Carregar</button>
+          <button onclick="validateCode()" aria-label="Validar Código do editor selecionado">Validar</button>
+          <button onclick="runCode()" aria-label="Executar Código do editor selecionado">Executar</button>
+          <button onclick="resetCode()" aria-label="Resetar Código do editor selecionado">Resetar</button>
           <button onclick="toggleTheme()" aria-label="Alternar Tema">Tema</button>
         </div>
       </section>
@@ -56,6 +39,10 @@
       </section>
       <dialog id="downloadDialog" role="dialog" aria-modal="true" aria-label="Baixar arquivos">
         <form method="dialog">
+          <div>
+            <label for="filePathInput">Nome do arquivo (ex.: word/src/scripts.js):</label>
+            <input type="text" id="filePathInput" aria-label="Especificar nome e caminho do arquivo" placeholder="Digite o nome/caminho do arquivo" required>
+          </div>
           <fieldset>
             <legend>Selecionar arquivos para baixar</legend>
             <label><input type="checkbox" name="files" value="index.html" checked> index.html</label>
