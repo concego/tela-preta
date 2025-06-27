@@ -1,80 +1,74 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Editor de código acessível criado pelo canal Euconcegojogar para programadores cegos e iniciantes.">
-    <title>Tela Preta - Editor de Código Acessível do Euconcegojogar</title>
-    <link rel="stylesheet" href="lib/codemirror/codemirror.min.css">
-    <link rel="stylesheet" href="lib/codemirror/theme/monokai.min.css">
-    <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
-    <header>
-      <h1>Tela Preta</h1>
-      <p>Editor de Código Online do <a href="https://youtube.com/@euconcegojogar" aria-label="Canal Euconcegojogar no YouTube">Euconcegojogar</a></p>
-    </header>
-    <div id="status" class="sr-only" aria-live="polite"></div>
-    <main>
-      <section id="editor-section">
-        <div id="editors-container">
-          <!-- Editores serão adicionados dinamicamente via JavaScript -->
-        </div>
-        <button onclick="addEditor()" aria-label="Adicionar novo editor">Adicionar Editor</button>
-        <div class="buttons">
-          <button onclick="saveCode()" aria-label="Salvar Código do editor selecionado">Salvar</button>
-          <button onclick="downloadAsZip()" aria-label="Baixar como ZIP">Baixar como ZIP</button>
-          <button onclick="openDownloadDialog()" aria-label="Baixar Arquivos">Baixar Arquivos</button>
-          <button onclick="loadFile()" aria-label="Carregar Arquivo no editor selecionado">Carregar</button>
-          <button onclick="validateCode()" aria-label="Validar Código do editor selecionado">Validar</button>
-          <button onclick="runCode()" aria-label="Executar Código do editor selecionado">Executar</button>
-          <button onclick="resetCode()" aria-label="Resetar Código do editor selecionado">Resetar</button>
-          <button onclick="toggleTheme()" aria-label="Alternar Tema">Tema</button>
-        </div>
-      </section>
-      <section id="preview-section">
-        <iframe id="preview" title="Visualização em tempo real"></iframe>
-        <div id="previewText" aria-live="polite" style="display: none;"></div>
-        <pre id="output" aria-live="polite" style="display: none;"></pre>
-      </section>
-      <dialog id="downloadDialog" role="dialog" aria-modal="true" aria-label="Baixar arquivos">
-        <form method="dialog">
-          <div>
-            <label for="filePathInput">Nome do arquivo (ex.: word/src/scripts.js):</label>
-            <input type="text" id="filePathInput" aria-label="Especificar nome e caminho do arquivo" placeholder="Digite o nome/caminho do arquivo" required>
-          </div>
-          <fieldset>
-            <legend>Selecionar arquivos para baixar</legend>
-            <label><input type="checkbox" name="files" value="index.html" checked> index.html</label>
-            <label><input type="checkbox" name="files" value="styles.css" checked> styles.css</label>
-            <label><input type="checkbox" name="files" value="scripts.js" checked> scripts.js</label>
-            <label><input type="checkbox" name="files" value="code.py" checked> code.py</label>
-            <label><input type="checkbox" name="files" value="code.c" checked> code.c</label>
-            <label><input type="checkbox" name="files" value="code.md" checked> code.md</label>
-            <label><input type="checkbox" name="files" value="code.ts" checked> code.ts</label>
-            <label><input type="checkbox" name="files" value="code.sql" checked> code.sql</label>
-            <label><input type="checkbox" name="files" value="Main.java" checked> Main.java</label>
-            <label><input type="checkbox" name="files" value="Main.kt" checked> Main.kt</label>
-            <label><input type="checkbox" name="files" value="index.php" checked> index.php</label>
-          </fieldset>
-          <button type="submit" aria-label="Confirmar download">Baixar</button>
-          <button type="button" onclick="document.getElementById('downloadDialog').close()" aria-label="Cancelar">Cancelar</button>
-        </form>
-      </dialog>
-    </main>
-    <script defer src="lib/codemirror/codemirror.min.js"></script>
-    <script defer src="lib/codemirror/mode/xml/xml.min.js"></script>
-    <script defer src="lib/codemirror/mode/css/css.min.js"></script>
-    <script defer src="lib/codemirror/mode/javascript/javascript.min.js"></script>
-    <script defer src="lib/codemirror/mode/python/python.min.js"></script>
-    <script defer src="lib/codemirror/mode/clike/clike.min.js"></script>
-    <script defer src="lib/codemirror/mode/markdown/markdown.min.js"></script>
-    <script defer src="lib/codemirror/mode/typescript/typescript.min.js"></script>
-    <script defer src="lib/codemirror/mode/sql/sql.min.js"></script>
-    <script defer src="lib/codemirror/mode/php/php.min.js"></script>
-    <script defer src="lib/jszip/jszip.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jshint/2.13.6/jshint.min.js"></script>
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-    <script defer src="scripts.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tela Preta</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Tela Preta</h1>
+    <p>Editor de código acessível com suporte a múltiplos arquivos</p>
+  </header>
+  <section class="editors"></section>
+  <section class="buttons">
+    <button onclick="addEditor()" aria-label="Adicionar novo editor" aria-describedby="status">Adicionar Editor</button>
+    <button onclick="showSupportedFormats()" aria-label="Ver formatos suportados" aria-describedby="status">Formatos Suportados</button>
+    <button onclick="formatCode()" aria-label="Formatar código JSON do editor ativo" aria-describedby="status">Formatar</button>
+    <button onclick="validateCode()" aria-label="Validar código dos editores selecionados" aria-describedby="status">Validar</button>
+    <button onclick="openDownloadDialog()" aria-label="Baixar arquivos dos editores selecionados" aria-describedby="status">Baixar Arquivos</button>
+    <button onclick="downloadAsZip()" aria-label="Baixar editores selecionados como ZIP" aria-describedby="status">Baixar como ZIP</button>
+  </section>
+  <p id="status" aria-live="polite">Bem-vindo ao Tela Preta</p>
+  <section class="validation">
+    <h2>Erros de Validação</h2>
+    <pre id="validationErrors"></pre>
+  </section>
+  <section class="preview">
+    <h2>Visualização</h2>
+    <iframe id="preview"></iframe>
+  </section>
+  <dialog id="downloadDialog" role="dialog" aria-modal="true" aria-label="Selecionar arquivos para download">
+    <form method="dialog">
+      <h2 autofocus>Baixar Arquivos</h2>
+      <fieldset>
+        <legend>Arquivos disponíveis</legend>
+        <ul id="downloadList"></ul>
+      </fieldset>
+      <button type="submit" aria-label="Confirmar download dos arquivos selecionados">Confirmar</button>
+      <button type="button" onclick="document.getElementById('downloadDialog').close()" aria-label="Fechar diálogo de download">Fechar</button>
+    </form>
+  </dialog>
+  <dialog id="formatsDialog" role="dialog" aria-modal="true" aria-label="Formatos suportados">
+    <form method="dialog">
+      <h2 autofocus>Formatos Suportados</h2>
+      <fieldset>
+        <legend>Lista de formatos suportados</legend>
+        <ul id="formatsList"></ul>
+      </fieldset>
+      <button type="button" onclick="document.getElementById('formatsDialog').close()" aria-label="Fechar diálogo de formatos">Fechar</button>
+    </form>
+  </dialog>
+  <footer>
+    <p>
+      <a href="./README.md" aria-label="Ver README no GitHub">README</a> |
+      <a href="./CHANGELOG.md" aria-label="Ver CHANGELOG no GitHub">CHANGELOG</a> |
+      <a href="./HELP.md" aria-label="Ver Ajuda no GitHub">Ajuda</a>
+    </p>
+  </footer>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/clike/clike.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/sql/sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/php/php.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jshint/2.13.6/jshint.min.js"></script>
+  <script src="scripts.js"></script>
+</body>
 </html>

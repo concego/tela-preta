@@ -1,86 +1,75 @@
-# Changelog
+# Changelog do Tela Preta
 
-## [1.9.0] - 2025-06-25
+Todas as mudanças notáveis no projeto **Tela Preta** são documentadas neste arquivo.
+
+## [2.4.2] - 2025-06-27
 
 ### Adicionado
-- Suporte a múltiplos editores, cada um com seleção de linguagem e botão “Selecionar” para definir o editor ativo.
-- Botão “Baixar como ZIP” para exportar o código do editor ativo com nome/caminho personalizado.
-- Botão “Adicionar Editor” para criar novos editores dinamicamente.
-- Estilos para múltiplos editores com destaque visual do editor ativo.
+- Validação de nomes de arquivo (permite apenas letras, números, `/`, `-`, `_`, e `.`).
+- Limite de 500.000 caracteres por editor para melhor desempenho.
+- Debounce na visualização para reduzir chamadas com arquivos grandes.
+- Resumo de erros de validação em `#validationErrors`.
+
+### Corrigido
+- Mensagens de validação TSX com exemplos práticos.
+- `checkPastedCode` para normalizar quebras de linha e espaços.
+- Acessibilidade: `aria-describedby` nos botões, `autofocus` nos diálogos.
+
+### Otimizado
+- Desempenho para arquivos grandes com limite e debounce.
+- Estilo de `#validationErrors` com `max-height` e `overflow`.
+
+## [2.4.1] - 2025-06-27
 
 ### Removido
-- Botões “Exportar” e “Exportar Múltiplos”.
+- Integração com GitHub (botão “Conectar com GitHub”, diálogo de repositórios, e funções de carregamento/salvamento).
+- Arquivo `callback.html`.
+- Documentação relacionada no `README.md` e `HELP.md`.
 
-## [1.8.0] - 2025-06-23
-
-### Adicionado
-- Suporte a PHP com validação, exportação (incluindo `composer.json`), e visualização acessível.
-- Campo para especificar nome/caminho do arquivo (ex.: `word/src/scripts.js`) no diálogo de download.
-
-## [1.7.1] - 2025-06-23
-
-### Removido
-- Botão "Limpar Dados" e lógica de expiração do `localStorage`.
-- Referências a `savedTimestamp`.
-
-### Alterado
-- Restaurado comportamento original de `localStorage` (persistência indefinida).
-- Atualizado `README.md` para remover menção a gestão de dados.
-
-## [1.7.0] - 2025-06-20
+## [2.4.0] - 2025-06-26
 
 ### Adicionado
-- Suporte a Kotlin com validação, exportação (incluindo `build.gradle.kts`), e visualização acessível.
-- Atalho Ctrl+K para validar Kotlin.
+- Suporte a múltiplos editores com CodeMirror.
+- Validação de código para HTML, CSS, JavaScript, TypeScript, Python, C, Markdown, SQL, Java, Kotlin, PHP, JSON.
+- Formatação de JSON no editor ativo.
+- Download de arquivos individuais ou como ZIP.
+- Visualização de HTML, Markdown, JSON e texto puro.
+- Persistência de código no `localStorage`.
+- Acessibilidade com TalkBack: `aria-label`, `aria-live="polite"`, `role="dialog"`.
+- Atalhos: Ctrl+S (salvar), Ctrl+V (validar), Ctrl+Z (baixar ZIP), Ctrl+K (validar Kotlin).
+- Documentação em `HELP.md`.
 
-### Removido
-- Tutorial interativo.
+### Corrigido
+- Navegação com TalkBack em diálogos e botões.
+- Erros de validação exibidos corretamente.
 
-## [1.6.0] - 2025-06-15
-
-### Adicionado
-- Suporte a Java com validação, exportação (`pom.xml`), e visualização.
-- Botão "Executar" para JavaScript; Java usa compilador externo.
-- Atalhos de teclado (Ctrl+S, Ctrl+V, Ctrl+E).
-
-## [1.5.0] - 2025-06-10
-
-### Adicionado
-- Validação em tempo real com `debounce`.
-- Visualização Markdown com `marked`.
-- Suporte a TypeScript e SQL.
-- Botão para carregar arquivos.
-- Tutorial interativo (removido em 1.7.0).
-
-## [1.4.0] - 2025-06-05
+## [2.3.0] - 2025-06-20
 
 ### Adicionado
-- Diálogo acessível para download.
-- Validação otimizada.
-- Variáveis CSS.
+- Suporte inicial a TypeScript (`.ts`, `.tsx`) com validação básica.
+- Área de visualização para HTML e Markdown.
 
-## [1.3.0] - 2025-05-30
+### Corrigido
+- Estilos responsivos para dispositivos móveis.
 
-### Adicionado
-- Suporte para Python, C, Markdown.
-- Validação para Python, C, Markdown.
-
-## [1.2.0] - 2025-05-25
+## [2.2.0] - 2025-06-15
 
 ### Adicionado
-- Download separado.
-- Validação com JSHint.
+- Suporte a Python, C, SQL, Java, Kotlin, PHP.
+- Validação básica para novas linguagens.
 
-## [1.1.0] - 2025-05-20
-
-### Adicionado
-- Fallback `<textarea>`.
-- Exportação ZIP.
-
-## [1.0.0] - 2025-05-15
+## [2.1.0] - 2025-06-10
 
 ### Adicionado
-- Editor com múltiplas linguagens.
-- Visualização HTML.
-- Temas escuro/claro.
-- Acessibilidade ARIA.
+- Suporte a múltiplos editores.
+- Download de arquivos como ZIP usando JSZip.
+
+## [2.0.0] - 2025-06-01
+
+### Adicionado
+- Interface inicial com CodeMirror.
+- Suporte a HTML, CSS, JavaScript, JSON.
+- Validação básica com JSHint para JavaScript.
+
+### Corrigido
+- Problemas de layout em navegadores móveis.

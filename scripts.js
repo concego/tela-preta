@@ -1,524 +1,419 @@
 const CONFIG = {
   languages: {
-    'text/plain': { ext: 'txt', name: 'Texto Simples' },
-    'text/html': { ext: 'html', name: 'HTML', file: 'index.html' },
-    'text/css': { ext: 'css', name: 'CSS', file: 'styles.css' },
-    'text/javascript': { ext: 'js', name: 'JavaScript', file: 'scripts.js' },
-    'text/x-python': { ext: 'py', name: 'Python', file: 'code.py' },
-    'text/x-csrc': { ext: 'c', name: 'C', file: 'code.c' },
-    'text/markdown': { ext: 'md', name: 'Markdown', file: 'code.md' },
-    'text/typescript': { ext: 'ts', name: 'TypeScript', file: 'code.ts' },
-    'text/x-sql': { ext: 'sql', name: 'SQL', file: 'code.sql' },
-    'text/x-java': { ext: 'java', name: 'Java', file: 'Main.java' },
-    'text/x-kotlin': { ext: 'kt', name: 'Kotlin', file: 'Main.kt' },
-    'application/x-httpd-php': { ext: 'php', name: 'PHP', file: 'index.php' }
-  },
-  templates: {
-    'index.html': `<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Meu Projeto</title>\n  <link rel="stylesheet" href="styles.css">\n</head>\n<body>\n  <h1>Bem-vindo ao meu projeto</h1>\n  <script src="scripts.js"></script>\n</body>\n</html>`,
-    'styles.css': `body {\n  font-family: Arial, sans-serif;\n  margin: 0;\n  padding: 20px;\n  background-color: #f0f0f0;\n}\nh1 {\n  color: #333;\n}`,
-    'scripts.js': `console.log("Olá, mundo!");`,
-    'code.py': `print("Olá, mundo!")`,
-    'code.c': `#include <stdio.h>\nint main() {\n  printf("Olá, mundo!\\n");\n  return 0;\n}`,
-    'code.md': `# Meu Projeto\n\nBem-vindo ao meu projeto!`,
-    'code.ts': `console.log("Olá, mundo!");`,
-    'code.sql': `SELECT * FROM users;`,
-    'Main.java': `public class Main {\n  public static void main(String[] args) {\n    System.out.println("Olá, mundo!");\n  }\n}`,
-    'Main.kt': `fun main() {\n  println("Olá, mundo!")\n}`,
-    'index.php': `<?php\necho "Olá, mundo!";\n?>`
+    'text/html': { name: 'HTML', exts: ['html', 'htm'], file: 'index.html' },
+    'text/css': { name: 'CSS', exts: ['css'], file: 'styles.css' },
+    'text/javascript': { name: 'JavaScript', exts: ['js', 'ts', 'tsx'], file: 'script.js' },
+    'text/x-python': { name: 'Python', exts: ['py'], file: 'script.py' },
+    'text/x-csrc': { name: 'C', exts: ['c', 'cpp', 'h'], file: 'main.c' },
+    'text/markdown': { name: 'Markdown', exts: ['md'], file: 'README.md' },
+    'text/x-sql': { name: 'SQL', exts: ['sql'], file: 'query.sql' },
+    'text/x-java': { name: 'Java', exts: ['java'], file: 'Main.java' },
+    'text/x-kotlin': { name: 'Kotlin', exts: ['kt'], file: 'Main.kt' },
+    'application/x-httpd-php': { name: 'PHP', exts: ['php'], file: 'index.php' },
+    'application/json': { name: 'JSON', exts: ['json'], file: 'data.json' },
+    'text/plain': { name: 'Texto', exts: ['txt'], file: 'newfile.txt' }
   }
 };
 
 let editors = [];
 let activeEditorIndex = 0;
-let isDarkTheme = true;
 
-function initializeEditors() {
-  const container = document.getElementById('editors-container');
-  addEditor(); // Adiciona o primeiro editor por padrão
-  loadSavedEditors();
-  document.addEventListener('keydown', handleShortcuts);
+function setStatus(message) {
+  const status = document.getElementById('status');
+  status.textContent = message;
 }
+
+function debounce(func, wait) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+const updatePreviewDebounced = debounce(updatePreview, 300);
 
 function addEditor() {
   const editorId = editors.length;
-  const editorContainer = document.createElement('div');
-  editorContainer.className = 'editor-container';
-  editorContainer.innerHTML = `
-    <label for="languageSelect${editorId}">Linguagem do editor ${editorId + 1}:</label>
-    <select id="languageSelect${editorId}" aria-label="Selecionar linguagem do editor ${editorId + 1}" onchange="changeLanguage(${editorId})">
-      <option value="text/plain">Texto Simples</option>
-      <option value="text/html">HTML</option>
-      <option value="text/css">CSS</option>
-      <option value="text/javascript">JavaScript</option>
-      <option value="text/x-python">Python</option>
-      <option value="text/x-csrc">C</option>
-      <option value="text/markdown">Markdown</option>
-      <option value="text/typescript">TypeScript</option>
-      <option value="text/x-sql">SQL</option>
-      <option value="text/x-java">Java</option>
-      <option value="text/x-kotlin">Kotlin</option>
-      <option value="application/x-httpd-php">PHP</option>
-    </select>
-    <textarea id="codeEditor${editorId}" tabindex="0"></textarea>
-    <textarea id="codeFallback${editorId}" aria-label="Editor de código alternativo ${editorId + 1}" style="display: none;"></textarea>
+  const editorDiv = document.createElement('div');
+  editorDiv.className = 'editor';
+  editorDiv.innerHTML = `
+    <input type="text" id="filePathInput${editorId}" placeholder="Caminho do arquivo (ex.: src/index.js)" aria-label="Caminho do arquivo para editor ${editorId + 1}">
+    <textarea id="codeFallback${editorId}"></textarea>
     <button onclick="selectEditor(${editorId})" aria-label="Selecionar editor ${editorId + 1} como ativo">Selecionar</button>
-    <div id="validationErrors${editorId}" aria-live="assertive"></div>
+    <input type="checkbox" id="includeEditor${editorId}" checked aria-label="Incluir editor ${editorId + 1} ao salvar ou baixar">
+    <label for="includeEditor${editorId}">Incluir ao salvar/baixar</label>
+    <pre id="validationErrors${editorId}"></pre>
   `;
-  document.getElementById('editors-container').appendChild(editorContainer);
-  const editor = CodeMirror.fromTextArea(document.getElementById(`codeEditor${editorId}`), {
+  document.querySelector('.editors').appendChild(editorDiv);
+  const textarea = document.getElementById(`codeFallback${editorId}`);
+  const editor = CodeMirror.fromTextArea(textarea, {
     lineNumbers: true,
     mode: 'text/plain',
-    theme: 'monokai',
-    tabSize: 2,
-    indentWithTabs: true
+    maxlength: 500000
   });
-  editor.on('change', debounce(() => {
-    if (activeEditorIndex === editorId) {
-      updatePreview();
-      validateCode(true);
-    }
-  }, 500));
-  editors.push({ editor, language: 'text/plain' });
-  if (navigator.userAgent.includes('TalkBack')) {
-    updateFallback(editorId, true);
-  }
+  editors.push({ editor, language: 'text/plain', filePath: 'newfile.txt', include: true });
+  document.getElementById(`filePathInput${editorId}`).addEventListener('input', () => changeLanguage(editorId));
+  editor.on('change', () => {
+    localStorage.setItem(`savedCode${editorId}`, editor.getValue());
+    if (activeEditorIndex === editorId) updatePreviewDebounced();
+  });
+  editor.on('paste', (cm, event) => checkPastedCode(cm, event, editorId));
   setStatus(`Editor ${editorId + 1} adicionado`);
 }
 
 function selectEditor(index) {
   activeEditorIndex = index;
   setStatus(`Editor ${index + 1} selecionado como ativo`);
-  updatePreview();
-  validateCode(true);
-  document.querySelectorAll('.editor-container').forEach((container, i) => {
-    container.classList.toggle('active-editor', i === index);
-  });
-}
-
-function handleShortcuts(e) {
-  if (e.ctrlKey && e.key === 's') {
-    e.preventDefault();
-    saveCode();
-  } else if (e.ctrlKey && e.key === 'v') {
-    e.preventDefault();
-    validateCode();
-  } else if (e.ctrlKey && e.key === 'z') {
-    e.preventDefault();
-    downloadAsZip();
-  } else if (e.ctrlKey && e.key === 'k') {
-    e.preventDefault();
-    if (document.getElementById(`languageSelect${activeEditorIndex}`).value === 'text/x-kotlin') {
-      validateCode();
-    }
-  }
-}
-
-function updateFallback(editorId, show) {
-  const fallback = document.getElementById(`codeFallback${editorId}`);
-  document.getElementById(`codeEditor${editorId}`).style.display = show ? 'none' : 'block';
-  fallback.style.display = show ? 'block' : 'none';
-  if (show) {
-    fallback.value = editors[editorId].editor.getValue();
-    fallback.addEventListener('input', () => editors[editorId].editor.setValue(fallback.value));
-  }
+  updatePreviewDebounced();
 }
 
 function changeLanguage(editorId) {
-  const select = document.getElementById(`languageSelect${editorId}`);
-  editors[editorId].language = select.value;
-  editors[editorId].editor.setOption('mode', select.value);
-  localStorage.setItem(`savedLanguage${editorId}`, select.value);
+  const filePathInput = document.getElementById(`filePathInput${editorId}`);
+  const filePath = filePathInput.value.trim();
+  if (!/^[a-zA-Z0-9\/\-_\.]+$/.test(filePath)) {
+    setStatus(`Nome de arquivo inválido no editor ${editorId + 1}. Use apenas letras, números, /, -, _, e .`);
+    filePathInput.value = CONFIG.languages['text/plain'].file;
+    return;
+  }
+  const ext = filePath.split('.').pop().toLowerCase();
+  const langEntry = Object.entries(CONFIG.languages).find(([_, lang]) => lang.exts.includes(ext));
+  const mode = langEntry ? langEntry[0] : 'text/plain';
+  editors[editorId].language = mode;
+  editors[editorId].editor.setOption('mode', mode);
+  editors[editorId].filePath = filePath || CONFIG.languages[mode].file;
+  localStorage.setItem(`savedLanguage${editorId}`, mode);
+  localStorage.setItem(`savedFilePath${editorId}`, editors[editorId].filePath);
   if (activeEditorIndex === editorId) {
-    updatePreview();
+    updatePreviewDebounced();
   }
-  setStatus(`Linguagem do editor ${editorId + 1} alterada para ${select.options[select.selectedIndex].text}`);
+  setStatus(`Linguagem do editor ${editorId + 1} definida como ${CONFIG.languages[mode].name} (.${ext || CONFIG.languages[mode].exts[0]})${!langEntry ? ', extensão inválida' : ''}`);
 }
 
-function saveCode() {
-  const editor = editors[activeEditorIndex].editor;
-  localStorage.setItem(`savedCode${activeEditorIndex}`, editor.getValue());
-  setStatus(`Código do editor ${activeEditorIndex + 1} salvo com sucesso`);
-}
-
-function loadSavedEditors() {
-  editors.forEach((_, index) => {
-    const savedCode = localStorage.getItem(`savedCode${index}`);
-    const savedLanguage = localStorage.getItem(`savedLanguage${index}`);
-    if (savedCode) {
-      editors[index].editor.setValue(savedCode);
-      if (navigator.userAgent.includes('TalkBack')) {
-        document.getElementById(`codeFallback${index}`).value = savedCode;
-      }
-    }
-    if (savedLanguage) {
-      document.getElementById(`languageSelect${index}`).value = savedLanguage;
-      editors[index].language = savedLanguage;
-      editors[index].editor.setOption('mode', savedLanguage);
-    }
-  });
-}
-
-function downloadAsZip() {
-  const zip = new JSZip();
-  const filePathInput = document.getElementById('filePathInput').value.trim();
-  const lang = editors[activeEditorIndex].language;
-  const code = editors[activeEditorIndex].editor.getValue();
-  const filename = filePathInput || (['text/x-kotlin', 'text/x-java'].includes(lang) ? `src/${CONFIG.languages[lang].file}` : CONFIG.languages[lang].file);
-  zip.file(filename, code);
-  if (lang === 'text/x-kotlin') {
-    zip.file('build.gradle.kts', `plugins {\n  kotlin("jvm") version "1.9.0"\n}\nrepositories {\n  mavenCentral()\n}\ndependencies {\n  implementation(kotlin("stdlib"))\n}`);
-  } else if (lang === 'text/x-java') {
-    zip.file('pom.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<project>\n  <modelVersion>4.0.0</modelVersion>\n  <groupId>com.example</groupId>\n  <artifactId>project</artifactId>\n  <version>1.0-SNAPSHOT</version>\n</project>`);
-  } else if (lang === 'application/x-httpd-php') {
-    zip.file('composer.json', `{\n  "name": "project",\n  "description": "Projeto PHP",\n  "require": {\n    "php": ">=7.4"\n  }\n}\n`);
+function checkPastedCode(cm, event, editorId = null) {
+  const pastedText = event.clipboardData?.getData('text') || '';
+  const currentText = cm ? cm.getValue() : document.getElementById(`codeFallback${editorId}`).value;
+  const normalize = text => text.replace(/\s+/g, ' ').trim();
+  if (pastedText && normalize(pastedText) !== normalize(currentText)) {
+    setStatus(`Aviso: Código colado no editor ${editorId + 1} contém alterações. Verifique o conteúdo.`);
   }
-  downloadZip(zip, 'project.zip', `Arquivos do editor ${activeEditorIndex + 1} exportados como ZIP`);
 }
 
-function openDownloadDialog() {
-  const dialog = document.getElementById('downloadDialog');
-  const filePathInput = document.getElementById('filePathInput');
-  const lang = editors[activeEditorIndex].language;
-  filePathInput.value = CONFIG.languages[lang].file;
-  dialog.showModal();
-  filePathInput.focus();
-  dialog.querySelector('form').onsubmit = e => {
-    e.preventDefault();
-    const code = editors[activeEditorIndex].editor.getValue();
-    const lang = editors[activeEditorIndex].language;
-    const filePath = filePathInput.value.trim();
-    const files = Array.from(dialog.querySelectorAll('input[name="files"]:checked')).map(input => input.value);
-    files.forEach(file => {
-      const content = CONFIG.languages[lang]?.file === file ? code || CONFIG.templates[file] : CONFIG.templates[file];
-      const path = ['Main.kt', 'Main.java'].includes(file) ? `src/${file}` : file;
-      downloadFile(path, content);
-    });
-    if (filePath) {
-      downloadFile(filePath, code);
-    }
-    setStatus(`Arquivos ${files.join(', ')} ${filePath ? 'e ' + filePath : ''} baixados com sucesso`);
-    dialog.close();
-  };
-}
-
-function downloadFile(filename, content) {
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  window.URL.revokeObjectURL(url);
-}
-
-function downloadZip(zip, filename, statusMessage) {
-  zip.generateAsync({ type: 'blob' }).then(blob => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    setStatus(statusMessage);
-  });
-}
-
-function loadFile() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = Object.values(CONFIG.languages).map(lang => `.${lang.ext}`).join(',');
-  input.onchange = e => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = event => {
-        editors[activeEditorIndex].editor.setValue(event.target.result);
-        if (navigator.userAgent.includes('TalkBack')) {
-          document.getElementById(`codeFallback${activeEditorIndex}`).value = event.target.result;
-        }
-        const ext = file.name.split('.').pop();
-        const lang = Object.keys(CONFIG.languages).find(key => CONFIG.languages[key].ext === ext);
-        if (lang) {
-          document.getElementById(`languageSelect${activeEditorIndex}`).value = lang;
-          editors[activeEditorIndex].language = lang;
-          editors[activeEditorIndex].editor.setOption('mode', lang);
-          localStorage.setItem(`savedLanguage${activeEditorIndex}`, lang);
-        }
-        setStatus(`Arquivo ${file.name} carregado no editor ${activeEditorIndex + 1}`);
-      };
-      reader.readAsText(file);
-    }
-  };
-  input.click();
-}
-
-function runCode() {
-  const code = editors[activeEditorIndex].editor.getValue();
-  const lang = editors[activeEditorIndex].language;
-  const output = document.getElementById('output');
-  output.style.display = 'block';
-  if (lang === 'text/x-kotlin' || lang === 'text/x-java' || lang === 'application/x-httpd-php') {
-    output.textContent = `Execução de ${CONFIG.languages[lang].name} não suportada diretamente no navegador. Use um compilador externo (ex.: JDoodle).`;
-    setStatus('Execução indisponível');
-  } else if (lang === 'text/javascript') {
+function updatePreview() {
+  const editor = editors[activeEditorIndex];
+  const code = editor.editor.getValue();
+  if (code.length > 500000) {
+    setStatus(`Aviso: Código no editor ${activeEditorIndex + 1} excede 500.000 caracteres. Visualização desativada para melhorar desempenho.`);
+    document.getElementById('preview').contentWindow.document.body.innerHTML = '';
+    return;
+  }
+  if (editor.language === 'text/html') {
+    document.getElementById('preview').contentWindow.document.open();
+    document.getElementById('preview').contentWindow.document.write(code);
+    document.getElementById('preview').contentWindow.document.close();
+  } else if (editor.language === 'text/markdown') {
+    document.getElementById('preview').contentWindow.document.body.innerHTML = marked(code);
+  } else if (editor.language === 'application/json') {
     try {
-      const result = eval(code);
-      output.textContent = result !== undefined ? String(result) : 'Executado com sucesso';
-      setStatus(`Código do editor ${activeEditorIndex + 1} executado com sucesso`);
+      const formatted = JSON.stringify(JSON.parse(code), null, 2);
+      document.getElementById('preview').contentWindow.document.body.textContent = formatted;
     } catch (e) {
-      output.textContent = `Erro: ${e.message}`;
-      setStatus('Erro na execução');
+      document.getElementById('preview').contentWindow.document.body.textContent = 'JSON inválido';
     }
   } else {
-    output.textContent = 'Execução não suportada para esta linguagem.';
-    setStatus('Execução indisponível');
+    document.getElementById('preview').contentWindow.document.body.textContent = code;
+  }
+}
+
+function formatCode() {
+  const editor = editors[activeEditorIndex];
+  if (editor.language === 'application/json') {
+    try {
+      const code = editor.editor.getValue();
+      const formatted = JSON.stringify(JSON.parse(code), null, 2);
+      editor.editor.setValue(formatted);
+      setStatus(`JSON no editor ${activeEditorIndex + 1} formatado com sucesso`);
+    } catch (e) {
+      setStatus(`Erro ao formatar JSON no editor ${activeEditorIndex + 1}: ${e.message}`);
+    }
+  } else {
+    setStatus(`Formatação disponível apenas para JSON no editor ${activeEditorIndex + 1}`);
   }
 }
 
 function validateHTML(code) {
   const errors = [];
-  try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(code, 'text/html');
-    if (doc.querySelector('parsererror')) {
-      errors.push('Erro de sintaxe HTML: Estrutura inválida.');
-    } else if (!code.includes('<html')) {
-      errors.push('Aviso: Estrutura HTML incompleta (falta <html> ou <!DOCTYPE html>).');
-    }
-  } catch (e) {
-    errors.push(`Erro de sintaxe HTML: ${e.message}`);
+  if (!/<[a-z][\s\S]*>/i.test(code)) {
+    errors.push('Código HTML inválido: nenhuma tag HTML encontrada');
   }
   return errors;
 }
 
 function validateCSS(code) {
   const errors = [];
-  if (!code.match(/([^{]+)\{([^}]*)\}/g) && code.trim()) {
-    errors.push('Erro de sintaxe CSS: Estrutura inválida (ex.: seletor { propriedade: valor; }).');
+  if (!/\{[\s\S]*\}/.test(code)) {
+    errors.push('Código CSS inválido: nenhuma regra CSS encontrada');
   }
   return errors;
 }
 
 function validateJavaScript(code) {
   const errors = [];
-  if (typeof JSHint !== 'undefined') {
+  try {
     JSHint(code);
-    errors.push(...JSHint.errors.map(err => `Erro na linha ${err.line}: ${err.reason}`));
-  } else {
-    try {
-      new Function(code);
-    } catch (e) {
-      errors.push(`Erro de sintaxe: ${e.message}`);
+    if (JSHint.errors.length > 0) {
+      JSHint.errors.forEach(err => {
+        if (err) errors.push(`Linha ${err.line}: ${err.reason}`);
+      });
     }
+  } catch (e) {
+    errors.push(`Erro de sintaxe: ${e.message}`);
   }
   return errors;
 }
 
 function validatePython(code) {
   const errors = [];
-  const lines = code.split('\n');
-  lines.forEach((line, index) => {
-    if (line.trim() && !line.startsWith('#')) {
-      const spaces = line.match(/^\s*/)[0].length;
-      if (spaces % 2 !== 0) {
-        errors.push(`Erro de indentação na linha ${index + 1}: Use múltiplos de 2 espaços.`);
-      }
-      if (line.match(/^[ \t]*[a-zA-Z_]\w*\s*:/) && !line.includes('def ') && !line.includes('class ')) {
-        errors.push(`Erro de sintaxe na linha ${index + 1}: Bloco inválido (ex.: falta 'def' ou 'class').`);
-      }
-    }
-  });
+  if (!/def |class |import /.test(code)) {
+    errors.push('Código Python inválido: nenhuma estrutura válida encontrada');
+  }
   return errors;
 }
 
 function validateC(code) {
   const errors = [];
-  if (!code.includes('main(')) {
-    errors.push('Erro: Função main() não encontrada.');
-  }
-  const braceCount = (code.match(/{/g) || []).length - (code.match(/}/g) || []).length;
-  if (braceCount !== 0) {
-    errors.push(`Erro de sintaxe: ${braceCount > 0 ? 'Chaves abertas' : 'Chaves fechadas'} em excesso.`);
+  if (!/#include |int main/.test(code)) {
+    errors.push('Código C inválido: #include ou int main não encontrados');
   }
   return errors;
 }
 
 function validateMarkdown(code) {
   const errors = [];
-  if (code.trim() && !code.match(/^(#{1,6}\s.*|[*+-]\s.*|\[.*\]\(.*\)|>.*)$/gm)) {
-    errors.push('Aviso: Estrutura Markdown inválida (ex.: use # para cabeçalhos, - para listas).');
-  }
-  return errors;
-}
-
-function validateTypeScript(code) {
-  const errors = [];
-  try {
-    new Function(code);
-  } catch (e) {
-    errors.push(`Erro de sintaxe TypeScript: ${e.message}`);
+  if (!/# |\[.*\]\(.*\)/.test(code)) {
+    errors.push('Código Markdown inválido: nenhum título ou link encontrado');
   }
   return errors;
 }
 
 function validateSQL(code) {
   const errors = [];
-  if (!code.match(/^(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP)\b.*;$/i) && code.trim()) {
-    errors.push('Erro de sintaxe SQL: Estrutura inválida (ex.: SELECT * FROM tabela;).');
+  if (!/SELECT |INSERT |UPDATE |DELETE /.test(code)) {
+    errors.push('Código SQL inválido: nenhum comando SQL válido encontrado');
   }
   return errors;
 }
 
 function validateJava(code) {
   const errors = [];
-  if (!code.match(/public\s+class\s+\w+/)) {
-    errors.push('Erro: Classe pública não encontrada (ex.: public class Main).');
-  }
-  if (!code.match(/public\s+static\s+void\s+main\s*\(\s*String\s*\[\s*\]\s*\w+\s*\)/)) {
-    errors.push('Aviso: Método main não encontrado (ex.: public static void main(String[] args)).');
-  }
-  const braceCount = (code.match(/{/g) || []).length - (code.match(/}/g) || []).length;
-  if (braceCount !== 0) {
-    errors.push(`Erro de sintaxe: ${braceCount > 0 ? 'Chaves abertas' : 'Chaves fechadas'} em excesso.`);
+  if (!/public class /.test(code)) {
+    errors.push('Código Java inválido: nenhuma classe pública encontrada');
   }
   return errors;
 }
 
 function validateKotlin(code) {
   const errors = [];
-  if (!code.match(/fun\s+main\s*\(\s*\)/)) {
-    errors.push('Aviso: Função main não encontrada (ex.: fun main()).');
-  }
-  const braceCount = (code.match(/{/g) || []).length - (code.match(/}/g) || []).length;
-  if (braceCount !== 0) {
-    errors.push(`Erro de sintaxe: ${braceCount > 0 ? 'Chaves abertas' : 'Chaves fechadas'} em excesso.`);
-  }
-  if (code.match(/class\s+\w+\s*[^({]/) && !code.match(/class\s+\w+\s*{/)) {
-    errors.push('Erro: Classe mal formada (ex.: class MinhaClasse { ... }).');
+  if (!/fun main/.test(code)) {
+    errors.push('Código Kotlin inválido: função main não encontrada');
   }
   return errors;
 }
 
 function validatePHP(code) {
   const errors = [];
-  if (!code.match(/<\?php\b/)) {
-    errors.push('Erro: Tag de abertura <?php não encontrada.');
-  }
-  if (!code.match(/\?>/)) {
-    errors.push('Aviso: Tag de fechamento ?> não encontrada.');
-  }
-  const braceCount = (code.match(/{/g) || []).length - (code.match(/}/g) || []).length;
-  if (braceCount !== 0) {
-    errors.push(`Erro de sintaxe: ${braceCount > 0 ? 'Chaves abertas' : 'Chaves fechadas'} em excesso.`);
+  if (!/<\?php/.test(code)) {
+    errors.push('Código PHP inválido: tag de abertura <?php não encontrada');
   }
   return errors;
 }
 
-function validateCode(live = false) {
-  const code = editors[activeEditorIndex].editor.getValue();
-  const lang = editors[activeEditorIndex].language;
-  const validators = {
-    'text/html': validateHTML,
-    'text/css': validateCSS,
-    'text/javascript': validateJavaScript,
-    'text/x-python': validatePython,
-    'text/x-csrc': validateC,
-    'text/markdown': validateMarkdown,
-    'text/typescript': validateTypeScript,
-    'text/x-sql': validateSQL,
-    'text/x-java': validateJava,
-    'text/x-kotlin': validateKotlin,
-    'application/x-httpd-php': validatePHP
-  };
-  const errors = validators[lang]?.(code) || ['Validação não disponível para Texto Simples.'];
-  if (!live) {
-    displayValidationResult(errors);
-  } else if (errors.length > 0) {
-    document.getElementById(`validationErrors${activeEditorIndex}`).textContent = errors.join(' ');
-  } else {
-    document.getElementById(`validationErrors${activeEditorIndex}`).textContent = '';
-  }
-}
-
-function displayValidationResult(errors) {
-  const status = document.getElementById('status');
-  const validationErrors = document.getElementById(`validationErrors${activeEditorIndex}`);
-  if (errors.length === 0) {
-    status.textContent = `Nenhum erro detectado no código do editor ${activeEditorIndex + 1}.`;
-    validationErrors.textContent = '';
-  } else {
-    status.textContent = `Erros encontrados no código do editor ${activeEditorIndex + 1}.`;
-    validationErrors.textContent = errors.join(' ');
-  }
-}
-
-function resetCode() {
-  editors[activeEditorIndex].editor.setValue('');
-  localStorage.removeItem(`savedCode${activeEditorIndex}`);
-  localStorage.removeItem(`savedLanguage${activeEditorIndex}`);
-  if (navigator.userAgent.includes('TalkBack')) {
-    document.getElementById(`codeFallback${activeEditorIndex}`).value = '';
-  }
-  updatePreview();
-  setStatus(`Código do editor ${activeEditorIndex + 1} resetado`);
-  document.getElementById(`validationErrors${activeEditorIndex}`).textContent = '';
-}
-
-function toggleTheme() {
-  isDarkTheme = !isDarkTheme;
-  editors.forEach(editor => {
-    editor.editor.setOption('theme', isDarkTheme ? 'monokai' : 'default');
-  });
-  document.body.style.backgroundColor = isDarkTheme ? '#1e1e1e' : '#fff';
-  document.body.style.color = isDarkTheme ? '#fff' : '#000';
-  setStatus(`Tema alterado para ${isDarkTheme ? 'escuro' : 'claro'}`);
-}
-
-function updatePreview() {
-  const code = editors[activeEditorIndex].editor.getValue();
-  const lang = editors[activeEditorIndex].language;
-  const preview = document.getElementById('preview');
-  const previewText = document.getElementById('previewText');
+function validateJSON(code) {
+  const errors = [];
   try {
-    if (lang === 'text/html') {
-      preview.contentDocument.open();
-      preview.contentDocument.write(code);
-      preview.contentDocument.close();
-      previewText.textContent = `Visualização HTML do editor ${activeEditorIndex + 1} renderizada no iframe.`;
-    } else if (lang === 'text/markdown' && typeof marked !== 'undefined') {
-      preview.contentDocument.body.innerHTML = marked.parse(code);
-      previewText.textContent = `Visualização Markdown do editor ${activeEditorIndex + 1} renderizada.`;
-    } else if (lang === 'application/x-httpd-php') {
-      preview.contentDocument.body.innerText = code;
-      previewText.textContent = `Código PHP do editor ${activeEditorIndex + 1} com destaque de sintaxe (execução requer servidor).`;
-    } else {
-      preview.contentDocument.body.innerText = code;
-      previewText.textContent = CONFIG.languages[lang]?.name === 'Kotlin' ? `Código Kotlin do editor ${activeEditorIndex + 1} com destaque de sintaxe.` : CONFIG.languages[lang]?.name === 'Java' ? `Código Java do editor ${activeEditorIndex + 1} com destaque de sintaxe.` : code;
-    }
+    JSON.parse(code);
   } catch (e) {
-    setStatus(`Erro na visualização do editor ${activeEditorIndex + 1}: ${e.message}`);
-    previewText.textContent = `Erro: ${e.message}`;
+    errors.push(`JSON inválido: ${e.message}`);
   }
-  if (navigator.userAgent.includes('TalkBack')) {
-    preview.style.display = 'none';
-    previewText.style.display = 'block';
+  return errors;
+}
+
+function validateCode(showAll = false) {
+  const errors = [];
+  editors.forEach((editorObj, index) => {
+    if (!showAll && !editorObj.include) return;
+    const code = editorObj.editor.getValue();
+    const lang = editorObj.language;
+    const filePath = editorObj.filePath;
+    const ext = filePath.split('.').pop().toLowerCase();
+    let result = [];
+    if (lang === 'text/html') {
+      result = validateHTML(code);
+    } else if (lang === 'text/css') {
+      result = validateCSS(code);
+    } else if (lang === 'text/javascript' || lang === 'text/typescript') {
+      result = validateJavaScript(code);
+      if (ext === 'tsx') {
+        if (!code.includes('React')) {
+          result.push('TSX requer importação do React (ex.: import React from "react";)');
+        }
+        if (!/<[A-Za-z][\s\S]*>/.test(code)) {
+          result.push('TSX deve conter elementos JSX (ex.: <div>Hello</div>)');
+        }
+      }
+    } else if (lang === 'text/x-python') {
+      result = validatePython(code);
+    } else if (lang === 'text/x-csrc') {
+      result = validateC(code);
+    } else if (lang === 'text/markdown') {
+      result = validateMarkdown(code);
+    } else if (lang === 'text/x-sql') {
+      result = validateSQL(code);
+    } else if (lang === 'text/x-java') {
+      result = validateJava(code);
+    } else if (lang === 'text/x-kotlin') {
+      result = validateKotlin(code);
+    } else if (lang === 'application/x-httpd-php') {
+      result = validatePHP(code);
+    } else if (lang === 'application/json') {
+      result = validateJSON(code);
+    }
+    if (result.length > 0) {
+      errors.push(`Editor ${index + 1} (${filePath}): ${result.join(', ')}`);
+    }
+    document.getElementById(`validationErrors${index}`).textContent = result.length > 0 ? result.join('\n') : 'Nenhum erro encontrado';
+  });
+  const validationErrors = document.getElementById('validationErrors');
+  const errorSummary = errors.length > 0 ? `Encontrados ${errors.length} erro(s) em ${errors.length} editor(es)` : 'Nenhum erro encontrado nos editores selecionados';
+  validationErrors.textContent = errors.length > 0 ? `${errorSummary}\n${errors.join('\n')}` : errorSummary;
+  setStatus(`Validação concluída: ${errorSummary}`);
+}
+
+function showSupportedFormats() {
+  const formatsList = document.getElementById('formatsList');
+  formatsList.innerHTML = Object.entries(CONFIG.languages).map(([mode, lang]) => `
+    <li role="option">
+      <button onclick="changeLanguage(${activeEditorIndex}, '${mode}')" aria-label="Selecionar formato ${lang.name}">
+        ${lang.name} (.${lang.exts.join(', .')})
+      </button>
+    </li>
+  `).join('');
+  const dialog = document.getElementById('formatsDialog');
+  dialog.showModal();
+  dialog.querySelector('button')?.focus();
+  dialog.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      dialog.close();
+      setStatus('Diálogo de formatos suportados fechado');
+    }
+  });
+  setStatus('Diálogo de formatos suportados aberto');
+}
+
+function openDownloadDialog() {
+  const downloadList = document.getElementById('downloadList');
+  downloadList.innerHTML = editors.map((editor, index) => `
+    <li>
+      <input type="checkbox" id="downloadEditor${index}" ${editor.include ? 'checked' : ''} aria-label="Incluir editor ${index + 1} no download">
+      <label for="downloadEditor${index}">${editor.filePath}</label>
+    </li>
+  `).join('');
+  const dialog = document.getElementById('downloadDialog');
+  dialog.addEventListener('close', () => {
+    if (dialog.returnValue === 'default') {
+      editors.forEach((editor, index) => {
+        const checkbox = document.getElementById(`downloadEditor${index}`);
+        if (checkbox.checked) {
+          const blob = new Blob([editor.editor.getValue()], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = editor.filePath;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      });
+      setStatus('Arquivos selecionados baixados');
+    }
+  }, { once: true });
+  dialog.showModal();
+  dialog.querySelector('button')?.focus();
+  setStatus('Diálogo de download aberto');
+}
+
+function downloadAsZip() {
+  const zip = new JSZip();
+  let includedFiles = 0;
+  editors.forEach((editor) => {
+    if (editor.include) {
+      zip.file(editor.filePath, editor.editor.getValue());
+      includedFiles++;
+    }
+  });
+  if (includedFiles === 0) {
+    setStatus('Nenhum editor selecionado para download');
+    return;
   }
+  zip.generateAsync({ type: 'blob' }).then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tela-preta.zip';
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus('Arquivos baixados como ZIP');
+  });
 }
 
-function setStatus(message) {
-  document.getElementById('status').textContent = message;
-}
+document.getElementById('formatButton').addEventListener('click', formatCode);
+document.getElementById('validateButton').addEventListener('click', validateCode);
+document.getElementById('downloadButton').addEventListener('click', openDownloadDialog);
+document.getElementById('zipButton').addEventListener('click', downloadAsZip);
 
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 's') {
+    e.preventDefault();
+    editors.forEach((editor, index) => {
+      if (editor.include) {
+        localStorage.setItem(`savedCode${index}`, editor.editor.getValue());
+      }
+    });
+    setStatus('Códigos salvos localmente');
+  } else if (e.ctrlKey && e.key === 'v') {
+    e.preventDefault();
+    validateCode(true);
+  } else if (e.ctrlKey && e.key === 'z') {
+    e.preventDefault();
+    downloadAsZip();
+  } else if (e.ctrlKey && e.key === 'k') {
+    e.preventDefault();
+    editors.forEach((editor, index) => {
+      if (editor.language === 'text/x-kotlin' && editor.include) {
+        const errors = validateKotlin(editor.editor.getValue());
+        document.getElementById(`validationErrors${index}`).textContent = errors.length > 0 ? errors.join('\n') : 'Nenhum erro encontrado';
+      }
+    });
+    setStatus('Validação de Kotlin concluída');
+  }
+});
 
-window.onload = initializeEditors;
+window.addEventListener('load', () => {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('savedCode')) {
+      const editorId = parseInt(key.replace('savedCode', ''));
+      addEditor();
+      editors[editorId].editor.setValue(localStorage.getItem(`savedCode${editorId}`) || '');
+      const savedLanguage = localStorage.getItem(`savedLanguage${editorId}`) || 'text/plain';
+      const savedFilePath = localStorage.getItem(`savedFilePath${editorId}`) || CONFIG.languages[savedLanguage].file;
+      document.getElementById(`filePathInput${editorId}`).value = savedFilePath;
+      editors[editorId].language = savedLanguage;
+      editors[editorId].filePath = savedFilePath;
+      editors[editorId].editor.setOption('mode', savedLanguage);
+    }
+  }
+  if (editors.length === 0) {
+    addEditor();
+  }
+  selectEditor(0);
+});
