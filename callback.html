@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autenticação GitHub - Tela Preta</title>
+</head>
+<body>
+  <p id="status" aria-live="polite">Processando autenticação com GitHub...</p>
+  <script>
+    // Processar código de autorização
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    if (code && state === sessionStorage.getItem('github_state')) {
+      sessionStorage.setItem('github_code', code);
+      window.location.href = '/tela-preta/';
+    } else {
+      document.getElementById('status').textContent = 'Erro na autenticação com GitHub';
+    }
+  </script>
+</body>
+</html>
