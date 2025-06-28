@@ -1,41 +1,47 @@
 # Tela Preta
 
-Tela Preta é um editor de código online acessível, criado pelo canal [Euconcegojogar](https://youtube.com/@euconcegojogar). Suporta múltiplas linguagens de programação e é otimizado para programadores cegos e iniciantes.
-
-## Como Usar
-
-1. Acesse em [https://concego.github.io/tela-preta/](https://concego.github.io/tela-preta/).
-2. Escolha uma linguagem no menu suspenso.
-3. Digite ou carregue seu código no editor.
-4. Use os botões para salvar, exportar, baixar, validar ou executar.
+**Tela Preta** é um editor de código acessível projetado para suportar múltiplos arquivos e linguagens de programação, com foco em acessibilidade para usuários de leitores de tela, como o TalkBack no Android. Ele permite criar, editar, validar, formatar e baixar códigos diretamente no navegador, com suporte a visualização em tempo real e persistência local.
 
 ## Funcionalidades
 
-- **Linguagens Suportadas**: HTML, CSS, JavaScript, Python, C, Markdown, TypeScript, SQL, Java, Kotlin, PHP, Texto Simples.
-- **Exportação**: Exporte um único arquivo ou múltiplos arquivos em ZIP, incluindo `pom.xml` para Java, `build.gradle.kts` para Kotlin, e `composer.json` para PHP.
-- **Download Separado**: Baixe arquivos individualmente via diálogo acessível.
-- **Validação**: Validação em tempo real para todas as linguagens.
-- **Visualização**: Visualização em tempo real para HTML, Markdown, e código estilizado para Java/Kotlin/PHP.
-- **Execução**: Suporte experimental para JavaScript; Java/Kotlin/PHP requerem compilador externo.
-- **Carregamento de Arquivos**: Importe arquivos locais.
-- **Acessibilidade**: Suporte a TalkBack, ARIA labels, atalhos de teclado.
+- **Múltiplos Editores**: Adicione vários editores para trabalhar com diferentes arquivos simultaneamente.
+- **Suporte a Linguagens**: Inclui HTML (`.html`), CSS (`.css`), JavaScript (`.js`, `.ts`, `.tsx`), Python (`.py`), C (`.c`, `.cpp`, `.h`), Markdown (`.md`), SQL (`.sql`), Java (`.java`), Kotlin (`.kt`), PHP (`.php`), JSON (`.json`) e texto puro (`.txt`).
+- **Validação de Código**: Verifica a sintaxe de todos os editores selecionados, com mensagens de erro detalhadas.
+- **Formatação de JSON**: Formata JSON no editor ativo com indentação adequada.
+- **Visualização**: Exibe HTML, Markdown, JSON ou texto puro em tempo real no editor ativo.
+- **Download de Arquivos**: Baixe arquivos individualmente ou como um arquivo ZIP.
+- **Acessibilidade**: Compatível com TalkBack, com `aria-label`, `aria-live="polite"` e diálogos acessíveis.
+- **Persistência**: Salva códigos e configurações no `localStorage` do navegador.
+- **Atalhos**:
+  - **Ctrl+S**: Salvar códigos localmente.
+  - **Ctrl+V**: Validar todos os editores.
+  - **Ctrl+Z**: Baixar como ZIP.
+  - **Ctrl+K**: Validar apenas código Kotlin.
+- **Versionamento**: Exibe a versão atual (2.4.5) no cabeçalho.
 
-## Acessibilidade
+## Como Usar
 
-- Rótulos ARIA e mensagens `aria-live`.
-- Fallback `<textarea>` para leitores de tela.
-- Visualização de texto alternativa.
-- Diálogo acessível para downloads.
-- Atalhos de teclado (ex.: Ctrl+S, Ctrl+V, Ctrl+E, Ctrl+K).
+1. Acesse o [Tela Preta](https://concego.github.io/tela-preta/) no navegador.
+2. Clique em “Adicionar Editor” para criar um novo editor.
+3. Insira o nome do arquivo (ex.: `src/index.js`) para definir a linguagem pela extensão.
+4. Escreva ou cole o código no editor. O conteúdo é salvo automaticamente.
+5. Use os botões para:
+   - Selecionar o editor ativo.
+   - Ver formatos suportados.
+   - Formatar JSON (se aplicável).
+   - Validar códigos.
+   - Baixar arquivos individualmente ou como ZIP.
+6. Navegue com TalkBack para interagir com botões, diálogos e mensagens de status.
+7. Consulte a [Ajuda](HELP.md) para instruções detalhadas.
 
-## Licença
+## Demonstração
 
-Licenciado sob a [MIT License](LICENSE).
+Acesse o projeto em [https://concego.github.io/tela-preta/](https://concego.github.io/tela-preta/).
 
-## Contato
+## Instalação
 
-Visite o canal [Euconcegojogar](https://youtube.com/@euconcegojogar) para mais conteúdos.
+Não é necessária instalação. O Tela Preta roda diretamente no navegador. Para desenvolvimento local:
 
----
-
-Desenvolvido por [concego](https://github.com/concego).
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/concego/tela-preta.git
