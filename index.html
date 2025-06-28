@@ -3,169 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tela Preta - Editor de Código</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    .editor-container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .editor {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-    }
-    .editor label {
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    .editor textarea {
-      width: 100%;
-      min-height: 200px;
-      font-size: 16px;
-      font-family: 'Courier New', Courier, monospace;
-      resize: vertical;
-      border: 1px solid #ccc;
-      padding: 5px;
-      box-sizing: border-box;
-    }
-    .button-container {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    #preview {
-      width: 100%;
-      min-height: 300px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    @media (min-width: 768px) {
-      .editor-container {
-        flex-direction: row;
-      }
-      .editor {
-        flex: 1;
-      }
-    }
-  </style>
+  <title>Tela Preta 2</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/theme/monokai.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/theme/solarized.min.css">
 </head>
 <body>
-  <h1>Tela Preta</h1>
-  <div class="editor-container">
-    <div class="editor">
-      <label for="html-editor">HTML</label>
-      <textarea id="html-editor" placeholder="Digite seu HTML aqui..."></textarea>
-    </div>
-    <div class="editor">
-      <label for="css-editor">CSS</label>
-      <textarea id="css-editor" placeholder="Digite seu CSS aqui..."></textarea>
-    </div>
-    <div class="editor">
-      <label for="js-editor">JavaScript</label>
-      <textarea id="js-editor" placeholder="Digite seu JavaScript aqui..."></textarea>
-    </div>
-  </div>
-  <div class="button-container">
-    <button id="save">Salvar Localmente</button>
-    <button id="export-html">Exportar HTML</button>
-    <button id="export-css">Exportar CSS</button>
-    <button id="export-js">Exportar JS</button>
-  </div>
-  <iframe id="preview"></iframe>
-
-  <script>
-    // Função para baixar arquivo
-    function downloadFile(content, fileName, mimeType) {
-      const blob = new Blob([content], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // Função para salvar no localStorage
-    function saveToLocalStorage() {
-      localStorage.setItem('html', document.getElementById('html-editor').value);
-      localStorage.setItem('css', document.getElementById('css-editor').value);
-      localStorage.setItem('js', document.getElementById('js-editor').value);
-      alert('Códigos salvos localmente!');
-    }
-
-    // Função para atualizar a visualização em tempo real
-    function updatePreview() {
-      const html = document.getElementById('html-editor').value;
-      const css = `<style>${document.getElementById('css-editor').value}</style>`;
-      const js = `<script>${document.getElementById('js-editor').value}<\/script>`;
-      const preview = document.getElementById('preview').contentWindow.document;
-      preview.open();
-      preview.write(html + css + js);
-      preview.close();
-    }
-
-    // Carregar códigos salvos do localStorage ao iniciar
-    window.onload = () => {
-      document.getElementById('html-editor').value = localStorage.getItem('html') || '';
-      document.getElementById('css-editor').value = localStorage.getItem('css') || '';
-      document.getElementById('js-editor').value = localStorage.getItem('js') || '';
-      updatePreview(); // Atualiza a visualização inicial
-    };
-
-    // Event listeners para os botões
-    document.getElementById('save').addEventListener('click', saveToLocalStorage);
-
-    document.getElementById('export-html').addEventListener('click', () => {
-      const htmlContent = document.getElementById('html-editor').value;
-      if (htmlContent.trim()) {
-        downloadFile(htmlContent, 'tela-preta.html', 'text/html');
-      } else {
-        alert('O campo HTML está vazio!');
-      }
-    });
-
-    document.getElementById('export-css').addEventListener('click', () => {
-      const cssContent = document.getElementById('css-editor').value;
-      if (cssContent.trim()) {
-        downloadFile(cssContent, 'tela-preta.css', 'text/css');
-      } else {
-        alert('O campo CSS está vazio!');
-      }
-    });
-
-    document.getElementById('export-js').addEventListener('click', () => {
-      const jsContent = document.getElementById('js-editor').value;
-      if (jsContent.trim()) {
-        downloadFile(jsContent, 'tela-preta.js', 'text/javascript');
-      } else {
-        alert('O campo JavaScript está vazio!');
-      }
-    });
-
-    // Atualizar visualização em tempo real ao digitar
-    document.querySelectorAll('textarea').forEach(textarea => {
-      textarea.addEventListener('input', updatePreview);
-    });
-  </script>
+  <header>
+    <button aria-label="Novo arquivo">Novo</button>
+    <button aria-label="Salvar arquivo">Salvar</button>
+    <button aria-label="Exportar arquivo">Exportar</button>
+    <button aria-label="Ativar comandos de voz">Voz</button>
+    <button aria-label="Alternar tema de alto contraste">Tema</button>
+    <button aria-label="Abrir ajuda">Ajuda</button>
+    <select aria-label="Selecionar linguagem de programação">
+      <option value="javascript">JavaScript</option>
+      <option value="htmlmixed">HTML</option>
+      <option value="css">CSS</option>
+      <option value="python">Python</option>
+      <option value="markdown">Markdown</option>
+      <option value="json">JSON</option>
+    </select>
+  </header>
+  <main>
+    <div id="editor" role="textbox" aria-label="Editor de código do Tela Preta 2" aria-describedby="editor-instructions"></div>
+    <div id="editor-instructions" class="sr-only">Use as setas para navegar pelo código no Tela Preta 2. Pressione Tab para pular para os controles. Deslize com dois dedos para a direita para abrir ou fechar a ajuda. Deslize com dois dedos para a esquerda para exportar.</div>
+    <div id="live-region" aria-live="polite"></div>
+  </main>
+  <section id="help-section" class="hidden" aria-label="Instruções de ajuda do Tela Preta 2">
+    <h2>Instruções do Tela Preta 2</h2>
+    <p>No Tela Preta 2, use os botões para criar, salvar, exportar ou mudar o tema. Comandos de voz: diga "novo", "salvar", "exportar" ou "ajuda". Gestos: deslize com dois dedos para a direita para abrir ou fechar a ajuda, ou para a esquerda para exportar.</p>
+    <button aria-label="Fechar ajuda">Fechar</button>
+    <button aria-label="Ouvir instruções">Ouvir</button>
+  </section>
+  <dialog id="export-dialog" aria-label="Escolher nome do arquivo no Tela Preta 2">
+    <form>
+      <label for="file-name">Nome do arquivo:</label>
+      <input type="text" id="file-name" aria-label="Digite o nome do arquivo no Tela Preta 2" placeholder="meu-arquivo">
+      <button type="submit" aria-label="Confirmar exportação">Exportar</button>
+      <button type="button" aria-label="Cancelar exportação" onclick="document.getElementById('export-dialog').close()">Cancelar</button>
+    </form>
+  </dialog>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/markdown/markdown.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
