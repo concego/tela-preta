@@ -319,56 +319,78 @@ function openDownloadDialog() {
     </li>
   `).join('');
   const dialog = document.getElementById('downloadDialog');
+  dialog.showModal();
+  dialog.querySelector('button')?.focus();
   dialog.addEventListener('close', () => {
-    if (dialog.returnValue === 'default') {
+    try {
+      let downloadedFiles = 0;
       editors.forEach((editor, index) => {
         const checkbox = document.getElementById(`downloadEditor${index}`);
-        if (checkbox.checked) {
-          const blob = new Blob([editor.editor.getValue()], { type: 'text/plain' });
+        if (checkbox && checkbox.checked) {
+          const code = editor.editor.getValue();
+          if (!code.trim()) {
+            setStatus(`Aviso: Editor ${index + 1} (${editor.filePath}) está vazio e não será baixado`);
+            return;
+          }
+          const blob = new Blob([code], { type: 'text/plain' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = editor.filePath;
+          document.body.appendChild(a);
           a.click();
+          document.body.removeChild(a);
           URL.revokeObjectURL(url);
+          downloadedFiles++;
         }
       });
-      setStatus('Arquivos selecionados baixados');
+      setStatus(downloadedFiles > 0 ? `${downloadedFiles} arquivo(s) baixado(s) com sucesso` : 'Nenhum arquivo selecionado para download');
+    } catch (e) {
+      setStatus(`Erro ao baixar arquivos: ${e.message}`);
+      console.error('Erro no download individual:', e);
     }
   }, { once: true });
-  dialog.showModal();
-  dialog.querySelector('button')?.focus();
   setStatus('Diálogo de download aberto');
 }
 
 function downloadAsZip() {
-  const zip = new JSZip();
-  let includedFiles = 0;
-  editors.forEach((editor) => {
-    if (editor.include) {
-      zip.file(editor.filePath, editor.editor.getValue());
-      includedFiles++;
+  try {
+    const zip = new JSZip();
+    let includedFiles = 0;
+    editors.forEach((editor, index) => {
+      if (editor.include) {
+        const code = editor.editor.getValue();
+        if (!code.trim()) {
+          setStatus(`Aviso: Editor ${index + 1} (${editor.filePath}) está vazio e não será incluído no ZIP`);
+          return;
+        }
+        zip.file(editor.filePath, code);
+        includedFiles++;
+      }
+    });
+    if (includedFiles === 0) {
+      setStatus('Nenhum editor com conteúdo válido selecionado para download');
+      return;
     }
-  });
-  if (includedFiles === 0) {
-    setStatus('Nenhum editor selecionado para download');
-    return;
+    zip.generateAsync({ type: 'blob' }).then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tela-preta.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setStatus(`${includedFiles} arquivo(s) baixado(s) como ZIP`);
+    }).catch(e => {
+      setStatus(`Erro ao gerar ZIP: ${e.message}`);
+      console.error('Erro no download ZIP:', e);
+    });
+  } catch (e) {
+    setStatus(`Erro ao preparar ZIP: ${e.message}`);
+    console.error('Erro ao preparar ZIP:', e);
   }
-  zip.generateAsync({ type: 'blob' }).then(blob => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tela-preta.zip';
-    a.click();
-    URL.revokeObjectURL(url);
-    setStatus('Arquivos baixados como ZIP');
-  });
 }
-
-document.getElementById('formatButton').addEventListener('click', formatCode);
-document.getElementById('validateButton').addEventListener('click', validateCode);
-document.getElementById('downloadButton').addEventListener('click', openDownloadDialog);
-document.getElementById('zipButton').addEventListener('click', downloadAsZip);
 
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.key === 's') {
@@ -398,22 +420,24 @@ document.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('load', () => {
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key.startsWith('savedCode')) {
-      const editorId = parseInt(key.replace('savedCode', ''));
-      addEditor();
-      editors[editorId].editor.setValue(localStorage.getItem(`savedCode${editorId}`) || '');
-      const savedLanguage = localStorage.getItem(`savedLanguage${editorId}`) || 'text/plain';
-      const savedFilePath = localStorage.getItem(`savedFilePath${editorId}`) || CONFIG.languages[savedLanguage].file;
-      document.getElementById(`filePathInput${editorId}`).value = savedFilePath;
-      editors[editorId].language = savedLanguage;
-      editors[editorId].filePath = savedFilePath;
-      editors[editorId].editor.setOption('mode', savedLanguage);
+  setTimeout(() => {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('savedCode')) {
+        const editorId = parseInt(key.replace('savedCode', ''));
+        addEditor();
+        editors[editorId].editor.setValue(localStorage.getItem(`savedCode${editorId}`) || '');
+        const savedLanguage = localStorage.getItem(`savedLanguage${editorId}`) || 'text/plain';
+        const savedFilePath = localStorage.getItem(`savedFilePath${editorId}`) || CONFIG.languages[savedLanguage].file;
+        document.getElementById(`filePathInput${editorId}`).value = savedFilePath;
+        editors[editorId].language = savedLanguage;
+        editors[editorId].filePath = savedFilePath;
+        editors[editorId].editor.setOption('mode', savedLanguage);
+      }
     }
-  }
-  if (editors.length === 0) {
-    addEditor();
-  }
-  selectEditor(0);
+    if (editors.length === 0) {
+      addEditor();
+    }
+    selectEditor(0);
+  }, 3000);
 });
