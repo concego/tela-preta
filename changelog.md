@@ -2,6 +2,42 @@
 
 Todas as mudanças notáveis no projeto **Tela Preta** são documentadas neste arquivo.
 
+## [2.4.5] - 2025-06-27
+
+### Corrigido
+- Corrigido download de arquivos individuais no diálogo `#downloadDialog` com verificação de arquivos vazios e melhor feedback.
+- Corrigido download como ZIP com verificação de conteúdo vazio e compatibilidade em navegadores móveis.
+- Melhorada acessibilidade do diálogo de download com foco automático e mensagens claras.
+- Atualizado versionamento para 2.4.5 no cabeçalho.
+
+### Documentação
+- Atualizado `HELP.md` com instruções detalhadas sobre downloads e resolução de problemas.
+
+## [2.4.4] - 2025-06-27
+
+### Corrigido
+- Atualizado o link do canal para [https://www.youtube.com/@euconcegojogar](https://www.youtube.com/@euconcegojogar).
+- Atualizado os créditos para: “Desenvolvedor, Anderson Carvalho, coocriador do canal Euconcegojogar. Licenciado sob MIT.”
+- Atualizado o versionamento para 2.4.4 no cabeçalho.
+
+### Documentação
+- Atualizado `HELP.md` e `README.md` com o novo link do canal e créditos.
+
+## [2.4.3] - 2025-06-27
+
+### Adicionado
+- Link para o canal no YouTube no rodapé.
+- Seção de créditos no rodapé.
+- Exibição da versão (2.4.3) no cabeçalho.
+- Mensagem de boas-vindas preservada por 3 segundos ao carregar.
+
+### Corrigido
+- Visibilidade da mensagem de boas-vindas com estilo `visibility: visible`.
+- Acessibilidade para link do canal, créditos e versionamento com `aria-label`.
+
+### Documentação
+- Atualizado `HELP.md` com informações sobre canal, créditos, versionamento e mensagem de boas-vindas.
+
 ## [2.4.2] - 2025-06-27
 
 ### Adicionado
@@ -34,42 +70,4 @@ Todas as mudanças notáveis no projeto **Tela Preta** são documentadas neste a
 - Formatação de JSON no editor ativo.
 - Download de arquivos individuais ou como ZIP.
 - Visualização de HTML, Markdown, JSON e texto puro.
-- Persistência de código no `localStorage`.
-- Acessibilidade com TalkBack: `aria-label`, `aria-live="polite"`, `role="dialog"`.
-- Atalhos: Ctrl+S (salvar), Ctrl+V (validar), Ctrl+Z (baixar ZIP), Ctrl+K (validar Kotlin).
-- Documentação em `HELP.md`.
-
-### Corrigido
-- Navegação com TalkBack em diálogos e botões.
-- Erros de validação exibidos corretamente.
-
-## [2.3.0] - 2025-06-20
-
-### Adicionado
-- Suporte inicial a TypeScript (`.ts`, `.tsx`) com validação básica.
-- Área de visualização para HTML e Markdown.
-
-### Corrigido
-- Estilos responsivos para dispositivos móveis.
-
-## [2.2.0] - 2025-06-15
-
-### Adicionado
-- Suporte a Python, C, SQL, Java, Kotlin, PHP.
-- Validação básica para novas linguagens.
-
-## [2.1.0] - 2025-06-10
-
-### Adicionado
-- Suporte a múltiplos editores.
-- Download de arquivos como ZIP usando JSZip.
-
-## [2.0.0] - 2025-06-01
-
-### Adicionado
-- Interface inicial com CodeMirror.
-- Suporte a HTML, CSS, JavaScript, JSON.
-- Validação básica com JSHint para JavaScript.
-
-### Corrigido
-- Problemas de layout em navegadores móveis.
+- Persistência de código no
