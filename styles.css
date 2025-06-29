@@ -11,12 +11,15 @@ header {
   padding: 10px;
   background: #333;
 }
-button, select {
+button, select, input {
   padding: 12px;
   font-size: 16px;
   min-width: 48px;
   min-height: 48px;
   cursor: pointer;
+}
+button:focus, select:focus, input:focus, #editor:focus {
+  outline: 2px solid #007bff;
 }
 #editor {
   width: 100%;
@@ -25,6 +28,7 @@ button, select {
 #help-section, #export-dialog {
   padding: 20px;
   border: 1px solid #ccc;
+  background: #fff;
 }
 .hidden {
   display: none;
@@ -47,6 +51,23 @@ button, select {
   padding: 10px;
   font-size: 16px;
 }
+.error {
+  color: #d32f2f;
+  font-size: 14px;
+  margin: 5px 0;
+}
+#file-history {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+#file-history li {
+  padding: 8px;
+  cursor: pointer;
+}
+#file-history li:focus, #file-history li:hover {
+  background: #f0f0f0;
+}
 @media (max-width: 600px) {
   header {
     flex-direction: column;
@@ -62,4 +83,10 @@ button, select {
 .high-contrast .CodeMirror {
   background: #000;
   color: #fff;
+}
+.high-contrast .error {
+  color: #ff5555;
+}
+.high-contrast #file-history li:focus, .high-contrast #file-history li:hover {
+  background: #333;
 }
