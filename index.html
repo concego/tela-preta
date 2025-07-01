@@ -1,68 +1,56 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tela Preta 2</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="lib/codemirror.css">
-  <link rel="stylesheet" href="lib/theme/monokai.css">
-  <link rel="stylesheet" href="lib/theme/solarized.css">
-  <link rel="stylesheet" href="lib/addon/hint/show-hint.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tela Preta 2</title>
+    <link rel="stylesheet" href="lib/codemirror/codemirror.min.css">
+    <link rel="stylesheet" href="lib/codemirror/theme/monokai.min.css">
+    <link rel="stylesheet" href="lib/codemirror/addon/hint/show-hint.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header aria-label="Barra de ferramentas do Tela Preta 2">
-    <button aria-label="Criar novo arquivo no Tela Preta 2" id="new-button" tabindex="0">Novo</button>
-    <button aria-label="Salvar arquivo no Tela Preta 2" id="save-button" tabindex="0">Salvar</button>
-    <button aria-label="Exportar arquivo no Tela Preta 2" id="export-button" aria-controls="export-dialog" tabindex="0">Exportar</button>
-    <button aria-label="Ativar autocompletar no Tela Preta 2" id="autocomplete-button" tabindex="0">Autocompletar</button>
-    <button aria-label="Alternar tema de alto contraste no Tela Preta 2" id="theme-button" tabindex="0">Tema</button>
-    <button aria-label="Abrir instruções de ajuda e histórico no Tela Preta 2" id="help-button" aria-controls="help-section" aria-expanded="false" tabindex="0">Ajuda</button>
-    <select aria-label="Selecionar linguagem de programação no Tela Preta 2" id="language-select" tabindex="0">
-      <option value="javascript">JavaScript</option>
-      <option value="htmlmixed">HTML</option>
-      <option value="css">CSS</option>
-      <option value="python">Python</option>
-      <option value="markdown">Markdown</option>
-      <option value="json">JSON</option>
-    </select>
-  </header>
-  <main>
-    <div id="editor" role="textbox" aria-label="Editor de código do Tela Preta 2" aria-describedby="editor-instructions" aria-multiline="true" tabindex="0"></div>
-    <div id="editor-instructions" class="sr-only">Use gestos do TalkBack para navegar. Deslize para a direita ou esquerda para mover o foco. Use dois toques para editar o código, clicar em botões, abrir o diálogo de exportação ou carregar arquivos salvos. Pressione o botão Ajuda para instruções e histórico.</div>
-    <div id="live-region" aria-live="polite" aria-atomic="true"></div>
-  </main>
-  <section id="help-section" class="hidden" aria-label="Instruções de ajuda e histórico do Tela Preta 2" aria-expanded="false" role="region">
-    <h2 id="help-title">Instruções do Tela Preta 2</h2>
-    <p id="help-description">Use os botões para criar, salvar, exportar, autocompletar ou mudar o tema. Deslize com o TalkBack para navegar. Use dois toques para editar o código, abrir o diálogo de exportação ou carregar arquivos salvos. Pressione o botão Ouvir para repetir estas instruções.</p>
-    <h3 id="history-title">Histórico de Arquivos Salvos</h3>
-    <ul id="file-history" aria-labelledby="history-title"></ul>
-    <button aria-label="Fechar instruções e histórico no Tela Preta 2" id="close-help-button" tabindex="0">Fechar</button>
-    <button aria-label="Ouvir instruções do Tela Preta 2" id="read-help-button" tabindex="0">Ouvir</button>
-  </section>
-  <dialog id="export-dialog" aria-label="Diálogo de exportação do Tela Preta 2" aria-modal="true" aria-labelledby="export-title" aria-describedby="export-description">
-    <form>
-      <h2 id="export-title">Escolher nome do arquivo</h2>
-      <p id="export-description" class="sr-only">Digite o nome do arquivo e pressione Exportar para salvar ou Cancelar para fechar. Use apenas letras, números, hífens ou sublinhados.</p>
-      <label for="file-name">Nome do arquivo:</label>
-      <input type="text" id="file-name" aria-label="Digite o nome do arquivo no Tela Preta 2" placeholder="meu-arquivo" tabindex="0">
-      <p id="file-name-error" class="error hidden" aria-live="polite">Nome inválido. Use apenas letras, números, hífens ou sublinhados.</p>
-      <button type="submit" aria-label="Confirmar exportação no Tela Preta 2" tabindex="0">Exportar</button>
-      <button type="button" aria-label="Cancelar exportação no Tela Preta 2" tabindex="0" onclick="document.getElementById('export-dialog').close()">Cancelar</button>
-    </form>
-  </dialog>
-  <script src="lib/codemirror.js"></script>
-  <script src="lib/mode/javascript.js"></script>
-  <script src="lib/mode/htmlmixed.js"></script>
-  <script src="lib/mode/css.js"></script>
-  <script src="lib/mode/python.js"></script>
-  <script src="lib/mode/markdown.js"></script>
-  <script src="lib/addon/hint/show-hint.js"></script>
-  <script src="lib/addon/hint/javascript-hint.js"></script>
-  <script src="lib/addon/hint/html-hint.js"></script>
-  <script src="lib/addon/hint/css-hint.js"></script>
-  <script src="lib/addon/hint/python-hint.js"></script>
-  <script src="lib/addon/hint/anyword-hint.js"></script>
-  <script src="script.js"></script>
+    <div id="container">
+        <h1>Tela Preta 2</h1>
+        <div id="controls">
+            <select id="language" aria-label="Selecionar linguagem de programação">
+                <option value="javascript">JavaScript</option>
+                <option value="json">JSON</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="python">Python</option>
+                <option value="markdown">Markdown</option>
+                <option value="xml">XML</option>
+                <option value="clike">C/C++</option>
+            </select>
+            <button id="save" aria-label="Salvar arquivo">Salvar</button>
+            <button id="export" aria-label="Exportar como ZIP">Exportar ZIP</button>
+            <button id="help" aria-label="Abrir ajuda e histórico">Ajuda</button>
+            <button id="autocomplete" aria-label="Ativar autocompletar">Autocompletar</button>
+        </div>
+        <textarea id="editor" aria-label="Editor de código"></textarea>
+        <div id="help-section" style="display: none;">
+            <h2>Ajuda</h2>
+            <p>Salve, edite e exporte código em várias linguagens. Use o histórico para gerenciar arquivos salvos.</p>
+            <h3>Histórico</h3>
+            <ul id="history-list" aria-label="Lista de arquivos salvos"></ul>
+        </div>
+    </div>
+    <script src="lib/codemirror/codemirror.min.js"></script>
+    <script src="lib/codemirror/mode/clike.js"></script>
+    <script src="lib/codemirror/mode/css.js"></script>
+    <script src="lib/codemirror/mode/htmlmixed.js"></script>
+    <script src="lib/codemirror/mode/javascript.js"></script>
+    <script src="lib/codemirror/mode/markdown.js"></script>
+    <script src="lib/codemirror/mode/meta.js"></script>
+    <script src="lib/codemirror/mode/python.js"></script>
+    <script src="lib/codemirror/mode/xml.js"></script>
+    <script src="lib/codemirror/addon/hint/show-hint.js"></script>
+    <script src="lib/codemirror/addon/hint/javascript-hint.js"></script>
+    <script src="lib/codemirror/addon/hint/html-hint.js"></script>
+    <script src="lib/codemirror/addon/hint/css-hint.js"></script>
+    <script src="lib/codemirror/addon/hint/anyword-hint.js"></script>
+    <script src="lib/jszip/jszip.min.js"></script>
+    <script src="scripts.js"></script>
 </body>
 </html>

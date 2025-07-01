@@ -1,92 +1,62 @@
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background: #fff;
+    font-family: Arial, sans-serif;
+    background-color: #1e1e1e;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
 }
-header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
-  background: #333;
+
+#container {
+    max-width: 800px;
+    margin: auto;
 }
-button, select, input {
-  padding: 12px;
-  font-size: 16px;
-  min-width: 48px;
-  min-height: 48px;
-  cursor: pointer;
+
+h1 {
+    text-align: center;
+    color: #f1f1f1;
 }
-button:focus, select:focus, input:focus, #editor:focus {
-  outline: 2px solid #007bff;
+
+#controls {
+    margin-bottom: 10px;
 }
-#editor {
-  width: 100%;
-  height: 70vh;
+
+#language, button {
+    padding: 8px;
+    margin-right: 5px;
+    font-size: 16px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
 }
-#help-section, #export-dialog {
-  padding: 20px;
-  border: 1px solid #ccc;
-  background: #fff;
+
+button:hover {
+    background-color: #555;
 }
-.hidden {
-  display: none;
+
+.CodeMirror {
+    border: 1px solid #555;
+    height: 400px;
+    background-color: #272822;
 }
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+
+#help-section {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #333;
+    border-radius: 4px;
 }
-#export-dialog form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+
+#history-list {
+    list-style: none;
+    padding: 0;
 }
-#export-dialog input {
-  padding: 10px;
-  font-size: 16px;
+
+#history-list li {
+    margin: 5px 0;
 }
-.error {
-  color: #d32f2f;
-  font-size: 14px;
-  margin: 5px 0;
-}
-#file-history {
-  list-style: none;
-  padding: 0;
-  margin: 10px 0;
-}
-#file-history li {
-  padding: 8px;
-  cursor: pointer;
-}
-#file-history li:focus, #file-history li:hover {
-  background: #f0f0f0;
-}
-@media (max-width: 600px) {
-  header {
-    flex-direction: column;
-  }
-  button, select, input {
-    width: 100%;
-  }
-}
-.high-contrast {
-  background: #000;
-  color: #fff;
-}
-.high-contrast .CodeMirror {
-  background: #000;
-  color: #fff;
-}
-.high-contrast .error {
-  color: #ff5555;
-}
-.high-contrast #file-history li:focus, .high-contrast #file-history li:hover {
-  background: #333;
+
+#history-list button {
+    margin-left: 10px;
+    padding: 5px;
 }
