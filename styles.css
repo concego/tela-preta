@@ -16,11 +16,19 @@ h1 {
     color: #f1f1f1;
 }
 
+#loading {
+    text-align: center;
+    padding: 10px;
+    background: #333;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
 #controls {
     transform: translateY(10px);
 }
 
-#language, #theme, button {
+#theme, button {
     padding: 8px;
     margin-right: 5px;
     font-size: 16px;
@@ -30,7 +38,7 @@ h1 {
     border-radius: 4px;
 }
 
-#language:hover, #theme:hover, button:hover {
+#theme:hover, button:hover {
     background-color: #555;
 }
 
@@ -40,19 +48,21 @@ h1 {
     background-color: #272822;
 }
 
-#help-section {
+#help-section, #languages-section, #preview, #console {
     transform: translateY(20px);
     padding: 10px;
     background-color: #333;
     border-radius: 4px;
+    content-visibility: auto;
+    contain-intrinsic-size: 200px 100px;
 }
 
-#history-list {
+#history-list, #languages-list {
     list-style: none;
     padding: 0;
 }
 
-#history-list li {
+#history-list li, #languages-list li {
     transform: translateY(5px);
 }
 
@@ -74,8 +84,4 @@ footer a {
 
 footer a:hover {
     text-decoration: underline;
-}
-
-#preview, #console {
-    transform: translateY(10px);
 }

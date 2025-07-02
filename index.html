@@ -4,46 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tela Preta 2</title>
-    <link rel="stylesheet" href="lib/codemirror/codemirror.min.css">
-    <link rel="stylesheet" href="lib/codemirror/theme/monokai.min.css">
-    <link rel="stylesheet" href="lib/codemirror/theme/solarized.min.css">
-    <link rel="stylesheet" href="lib/codemirror/addon/hint/show-hint.css">
-    <link rel="stylesheet" href="lib/codemirror/addon/lint/lint.css">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css" as="style">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/solarized.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/hint/show-hint.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/lint/lint.min.css">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <div id="container">
       <h1>Tela Preta 2</h1>
+      <div id="loading" style="display: block; text-align: center;" aria-live="polite">Carregando editor...</div>
       <div id="controls">
-        <select id="language" aria-label="Selecionar linguagem de programação">
-          <option value="javascript">JavaScript</option>
-          <option value="json">JSON</option>
-          <option value="html">HTML</option>
-          <option value="css">CSS</option>
-          <option value="python">Python</option>
-          <option value="markdown">Markdown</option>
-          <option value="xml">XML</option>
-          <option value="clike">C/C++</option>
-          <option value="php">PHP</option>
-          <option value="typescript">TypeScript</option>
-          <option value="sql">SQL</option>
-        </select>
         <select id="theme" aria-label="Selecionar tema do editor">
           <option value="monokai">Monokai (Escuro)</option>
           <option value="solarized">Solarized (Claro)</option>
         </select>
         <button id="save" aria-label="Salvar arquivo (Alt+S)">Salvar</button>
+        <button id="download" aria-label="Baixar arquivo atual (Alt+D)">Baixar</button>
         <button id="export" aria-label="Exportar como ZIP (Alt+E)">Exportar ZIP</button>
         <button id="export-txt" aria-label="Exportar como TXT">Exportar TXT</button>
         <button id="export-md" aria-label="Exportar como MD">Exportar MD</button>
         <button id="format" aria-label="Formatar código">Formatar</button>
         <button id="toggle-preview" aria-label="Alternar pré-visualização">Pré-visualizar</button>
+        <button id="clear" aria-label="Limpar editor (Alt+C)">Limpar</button>
+        <button id="languages" aria-label="Exibir linguagens suportadas (Alt+L)">Linguagens</button>
         <button id="help" aria-label="Abrir ajuda e histórico">Ajuda</button>
         <button id="autocomplete" aria-label="Ativar autocompletar (Ctrl+Espaço)">Autocompletar</button>
       </div>
       <textarea id="editor" aria-label="Editor de código"></textarea>
       <div id="preview" style="display: none; border: 1px solid #555; min-height: 200px; background: #fff; color: #000; padding: 10px;"></div>
-      <div id="console" style="display: none; border: 1px solid #555; min-height: 100px; background: #272822; color: #fff; padding: 10px; font-family: monospace;"></div>
+      <div id="console" style="display: none; border: 1px solid #555; min-height: 100px; background: #272822; color: #fff; padding: 10px; font-family: monospace;" aria-live="assertive"></div>
+      <div id="languages-section" style="display: none; padding: 10px; background: #333; border-radius: 4px;">
+        <h2>Linguagens Suportadas</h2>
+        <ul id="languages-list" aria-label="Lista de linguagens suportadas" aria-live="polite"></ul>
+        <button id="close-languages" aria-label="Fechar lista de linguagens">Fechar</button>
+      </div>
       <div id="help-section" style="display: none;">
         <h2>Ajuda</h2>
         <p>Salve, edite e exporte código em várias linguagens. Use o histórico para gerenciar arquivos salvos.</p>
@@ -60,31 +57,16 @@
         <p>Desenvolvido por Anderson Carvalho, e testado por Adri Lima, os fundadores do canal <a href="https://youtube.com/euconcegojogar" aria-label="Canal Euconcegojogar no YouTube">Euconcegojogar</a>. Contato: <a href="mailto:euconcego@gmail.com" aria-label="Enviar e-mail para euconcego@gmail.com">euconcego@gmail.com</a>.</p>
       </footer>
     </div>
-    <script src="lib/codemirror/codemirror.min.js"></script>
-    <script src="https://unpkg.com/jshint@2.13.6/dist/jshint.js"></script>
-    <script src="lib/codemirror/addon/lint/lint.js"></script>
-    <script src="lib/codemirror/addon/lint/javascript-lint.js"></script>
-    <script src="https://unpkg.com/prettier@3.3.2/standalone.js"></script>
-    <script src="https://unpkg.com/prettier@3.3.2/parser-babel.js"></script>
-    <script src="https://unpkg.com/prettier@3.3.2/parser-html.js"></script>
-    <script src="https://unpkg.com/prettier@3.3.2/parser-postcss.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
+    <script src="https://unpkg.com/jshint@2.13.6/dist/jshint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/lint/lint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/lint/javascript-lint.min.js"></script>
+    <script src="https://unpkg.com/prettier@3.3.2/standalone.min.js"></script>
+    <script src="https://unpkg.com/prettier@3.3.2/parser-babel.min.js"></script>
+    <script src="https://unpkg.com/prettier@3.3.2/parser-html.min.js"></script>
+    <script src="https://unpkg.com/prettier@3.3.2/parser-postcss.min.js"></script>
     <script src="https://unpkg.com/showdown@2.1.0/dist/showdown.min.js"></script>
     <script src="https://unpkg.com/lz-string@1.5.0/libs/lz-string.min.js"></script>
-    <script src="lib/codemirror/mode/javascript.js"></script>
-    <script src="lib/codemirror/mode/htmlmixed.js"></script>
-    <script src="lib/codemirror/mode/css.js"></script>
-    <script src="lib/codemirror/mode/python.js"></script>
-    <script src="lib/codemirror/mode/markdown.js"></script>
-    <script src="lib/codemirror/mode/xml.js"></script>
-    <script src="lib/codemirror/mode/clike.js"></script>
-    <script src="lib/codemirror/mode/php.js"></script>
-    <script src="lib/codemirror/mode/sql.js"></script>
-    <script src="lib/codemirror/mode/meta.js"></script>
-    <script src="lib/codemirror/addon/hint/show-hint.js"></script>
-    <script src="lib/codemirror/addon/hint/javascript-hint.js"></script>
-    <script src="lib/codemirror/addon/hint/html-hint.js"></script>
-    <script src="lib/codemirror/addon/hint/css-hint.js"></script>
-    <script src="lib/codemirror/addon/hint/anyword-hint.js"></script>
     <script src="lib/jszip/jszip.min.js"></script>
     <script src="scripts.js"></script>
   </body>
