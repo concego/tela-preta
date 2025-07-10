@@ -1,430 +1,969 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Inicializa o editor CodeMirror
-  const loadingDiv = document.getElementById('loading');
-  const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+const appState = {
+
+  currentProject: '',
+
+  editor: null,
+
+  historyMessages: [],
+
+  projectsCache: new Set()
+
+};
+
+// Função para validar nomes de projetos e arquivos
+
+function isValidName(name) {
+
+  return /^[a-zA-Z0-9][a-zA-Z0-9\-_\.]*$/.test(name);
+
+}
+
+// Função para verificar limite de localStorage
+
+function checkStorageLimit() {
+
+  const total = JSON.stringify(localStorage).length;
+
+  const maxSize = 5 * 1024 * 1024; // 5MB
+
+  if (total > maxSize * 0.9) {
+
+    showErrorModal('Aviso: O armazenamento está quase cheio. Considere excluir arquivos ou projetos.');
+
+  }
+
+}
+
+// Função para mostrar modal de erro
+
+function showErrorModal(message) {
+
+  const errorMessage = document.getElementById('errorMessage');
+
+  errorMessage.textContent = message;
+
+  const errorModal = document.getElementById('errorModal');
+
+  errorModal.style.display = 'block';
+
+  errorModal.querySelector('button').focus();
+
+}
+
+// Função para fechar modal de erro
+
+function closeErrorModal() {
+
+  document.getElementById('errorModal').style.display = 'none';
+
+}
+
+// Função para inicializar o editor
+
+function initEditor() {
+
+  const editorElement = document.getElementById('editor');
+
+  appState.editor = CodeMirror.fromTextArea(editorElement, {
+
     lineNumbers: true,
-    theme: 'monokai',
-    mode: 'javascript',
-    lint: { lintOnChange: true },
-    extraKeys: {
-      'Ctrl-Space': 'autocomplete',
-      'Alt-S': () => saveButton.click(),
-      'Alt-E': () => exportButton.click(),
-      'Alt-D': () => downloadButton.click(),
-      'Alt-C': () => clearButton.click(),
-      'Alt-L': () => languagesButton.click()
-    }
+
+    theme: 'default',
+
+    viewportMargin: Infinity
+
   });
-  editor.focus();
-  loadingDiv.style.display = 'none';
 
-  // Elementos do DOM
-  const themeSelect = document.getElementById('theme');
-  const saveButton = document.getElementById('save');
-  const downloadButton = document.getElementById('download');
-  const exportButton = document.getElementById('export');
-  const exportTxtButton = document.getElementById('export-txt');
-  const exportMdButton = document.getElementById('export-md');
-  const formatButton = document.getElementById('format');
-  const togglePreviewButton = document.getElementById('toggle-preview');
-  const clearButton = document.getElementById('clear');
-  const languagesButton = document.getElementById('languages');
-  const closeLanguagesButton = document.getElementById('close-languages');
-  const helpButton = document.getElementById('help');
-  const closeHelpButton = document.getElementById('close-help');
-  const autocompleteButton = document.getElementById('autocomplete');
-  const languagesSection = document.getElementById('languages-section');
-  const languagesList = document.getElementById('languages-list');
-  const helpSection = document.getElementById('help-section');
-  const historyList = document.getElementById('history-list');
-  const previewDiv = document.getElementById('preview');
-  const consoleDiv = document.getElementById('console');
-  let previewVisible = false;
-  let currentMode = 'javascript';
+}
 
-  // Carrega histórico do localStorage com compressão
-  let history = JSON.parse(LZString.decompress(localStorage.getItem('codeHistory')) || '[]') || [];
+// Função para adicionar mensagem ao console de debug e histórico
 
-  // Mapeamento de linguagens e extensões
-  const modeMap = {
-    javascript: { name: 'javascript' },
-    json: { name: 'javascript', json: true },
-    html: 'htmlmixed',
-    css: 'css',
-    python: 'python',
-    markdown: 'markdown',
-    xml: 'xml',
-    clike: 'clike',
-    php: 'php',
-    typescript: { name: 'javascript', typescript: true },
-    sql: 'sql',
-    ruby: 'ruby',
-    go: 'go'
-  };
+function addDebugMessage(message, type = 'info') {
 
-  const extensionMap = {
-    javascript: '.js',
-    json: '.json',
-    html: '.html',
-    css: '.css',
-    python: '.py',
-    markdown: '.md',
-    xml: '.xml',
-    clike: '.cpp',
-    php: '.php',
-    typescript: '.ts',
-    sql: '.sql',
-    ruby: '.rb',
-    go: '.go'
-  };
+  const debugMessages = document.getElementById('debugMessages');
 
-  // Carregamento assíncrono de modos via CDN
-  const loadMode = (language) => {
-    const modeFiles = {
-      clike: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/clike/clike.min.js',
-      css: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/css/css.min.js',
-      html: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/htmlmixed/htmlmixed.min.js',
-      javascript: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/javascript/javascript.min.js',
-      markdown: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/markdown/markdown.min.js',
-      python: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/python/python.min.js',
-      xml: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/xml/xml.min.js',
-      php: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/php/php.min.js',
-      sql: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/sql/sql.min.js',
-      ruby: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/ruby/ruby.min.js',
-      go: 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/go/go.min.js'
+  const li = document.createElement('li');
+
+  li.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+
+  li.className = type === 'error' ? 'log-message log-error' : 'log-message';
+
+  debugMessages.appendChild(li);
+
+  debugMessages.scrollTop = debugMessages.scrollHeight;
+
+  // Adicionar ao histórico (limitar a 100 mensagens)
+
+  appState.historyMessages.push(`[${new Date().toLocaleTimeString()}] ${message}`);
+
+  if (appState.historyMessages.length > 100) {
+
+    appState.historyMessages.shift();
+
+  }
+
+  updateHistory();
+
+}
+
+// Função para atualizar o histórico
+
+function updateHistory() {
+
+  const historyMessagesUl = document.getElementById('historyMessages');
+
+  historyMessagesUl.innerHTML = '';
+
+  appState.historyMessages.forEach(msg => {
+
+    const li = document.createElement('li');
+
+    li.textContent = msg;
+
+    li.className = 'log-message';
+
+    historyMessagesUl.appendChild(li);
+
+  });
+
+}
+
+// Função para limpar console de debug
+
+function clearDebugConsole() {
+
+  document.getElementById('debugMessages').innerHTML = '';
+
+  addDebugMessage('Console limpo.');
+
+}
+
+// Função para limpar histórico
+
+function clearHistory() {
+
+  appState.historyMessages = [];
+
+  updateHistory();
+
+  addDebugMessage('Histórico limpo.');
+
+}
+
+// Função para abrir e fechar modais
+
+function openHistory() {
+
+  const historyModal = document.getElementById('historyModal');
+
+  historyModal.style.display = 'block';
+
+  historyModal.querySelector('button').focus();
+
+}
+
+function closeHistory() {
+
+  document.getElementById('historyModal').style.display = 'none';
+
+}
+
+function openHelp() {
+
+  const helpModal = document.getElementById('helpModal');
+
+  helpModal.style.display = 'block';
+
+  helpModal.querySelector('button').focus();
+
+}
+
+function closeHelp() {
+
+  document.getElementById('helpModal').style.display = 'none';
+
+}
+
+function openModal() {
+
+  const saveModal = document.getElementById('saveModal');
+
+  saveModal.style.display = 'block';
+
+  document.getElementById('projectName').focus();
+
+}
+
+function closeModal() {
+
+  document.getElementById('saveModal').style.display = 'none';
+
+}
+
+function openRenameModal() {
+
+  if (!appState.currentProject) {
+
+    showErrorModal('Selecione um projeto para renomear!');
+
+    addDebugMessage('Erro: Nenhum projeto selecionado para renomeação.', 'error');
+
+    return;
+
+  }
+
+  const renameModal = document.getElementById('renameModal');
+
+  document.getElementById('newProjectName').value = '';
+
+  renameModal.style.display = 'block';
+
+  document.getElementById('newProjectName').focus();
+
+}
+
+function closeRenameModal() {
+
+  document.getElementById('renameModal').style.display = 'none';
+
+}
+
+// Função para limpar campo de busca
+
+function clearSearch() {
+
+  document.getElementById('fileSearch').value = '';
+
+  filterFiles();
+
+}
+
+// Função para atualizar a lista de projetos
+
+function updateProjectList() {
+
+  const projectList = document.getElementById('projectList');
+
+  const currentProjectSelect = document.getElementById('currentProject');
+
+  const clearProjectBtn = document.getElementById('clearProjectBtn');
+
+  const renameProjectBtn = document.getElementById('renameProjectBtn');
+
+  // Atualizar cache
+
+  appState.projectsCache.clear();
+
+  Object.keys(localStorage).filter(key => !key.startsWith('__') && key !== 'current').forEach(key => {
+
+    appState.projectsCache.add(key.split('/')[0]);
+
+  });
+
+  projectList.innerHTML = '';
+
+  appState.projectsCache.forEach(project => {
+
+    const option = document.createElement('option');
+
+    option.value = project;
+
+    projectList.appendChild(option);
+
+  });
+
+  currentProjectSelect.innerHTML = '<option value="">Selecione um projeto</option>';
+
+  appState.projectsCache.forEach(project => {
+
+    const option = document.createElement('option');
+
+    option.value = project;
+
+    option.textContent = project;
+
+    if (project === appState.currentProject) option.selected = true;
+
+    currentProjectSelect.appendChild(option);
+
+  });
+
+  clearProjectBtn.disabled = !appState.currentProject;
+
+  renameProject Btn.disabled = !appState.currentProject;
+
+}
+
+// Função para salvar arquivo
+
+function saveFile() {
+
+  const projectName = document.getElementById('projectName').value.trim();
+
+  const filePath = document.getElementById('filePath').value.trim();
+
+  const fileName = document.getElementById('fileName').value.trim();
+
+  const editorContent = appState.editor.getValue();
+
+  if (!projectName) {
+
+    showErrorModal('Nome do projeto é obrigatório!');
+
+    addDebugMessage('Erro: Nome do projeto é obrigatório.', 'error');
+
+    return;
+
+  }
+
+  if (!fileName) {
+
+    showErrorModal('Nome do arquivo é obrigatório!');
+
+    addDebugMessage('Erro: Nome do arquivo é obrigatório.', 'error');
+
+    return;
+
+  }
+
+  if (!isValidName(projectName)) {
+
+    showErrorModal('Nome do projeto contém caracteres inválidos!');
+
+    addDebugMessage('Erro: Nome do projeto contém caracteres inválidos.', 'error');
+
+    return;
+
+  }
+
+  if (!isValidName(filePath + '/' + fileName)) {
+
+    showErrorModal('Caminho ou nome do arquivo contém caracteres inválidos!');
+
+    addDebugMessage('Erro: Caminho ou nome do arquivo contém caracteres inválidos.', 'error');
+
+    return;
+
+  }
+
+  const storageKey = filePath ? `${projectName}/${filePath}/${fileName}` : `${projectName}/${fileName}`;
+
+  localStorage.setItem(storageKey, JSON.stringify({ content: editorContent }));
+
+  checkStorageLimit();
+
+  addDebugMessage(`Arquivo salvo: ${storageKey}`);
+
+  appState.currentProject = projectName;
+
+  updateProjectList();
+
+  updateFileList();
+
+  closeModal();
+
+}
+
+// Função para renomear projeto
+
+function renameProject() {
+
+  const newProjectName = document.getElementById('newProjectName').value.trim();
+
+  if (!newProjectName) {
+
+    showErrorModal('Novo nome do projeto é obrigatório!');
+
+    addDebugMessage('Erro: Novo nome do projeto é obrigatório.', 'error');
+
+    return;
+
+  }
+
+  if (!isValidName(newProjectName)) {
+
+    showErrorModal('Novo nome do projeto contém caracteres inválidos!');
+
+    addDebugMessage('Erro: Novo nome do projeto contém caracteres inválidos.', 'error');
+
+    return;
+
+  }
+
+  if (newProjectName === appState.currentProject) {
+
+    showErrorModal('O novo nome deve ser diferente do atual!');
+
+    addDebugMessage('Erro: Novo nome do projeto é igual ao atual.', 'error');
+
+    return;
+
+  }
+
+  if (appState.projectsCache.has(newProjectName)) {
+
+    showErrorModal(`Já existe um projeto com esse nome!`);
+
+    addDebugMessage(`Erro: Projeto "${newProjectName}" já existe.`, 'error');
+
+    return;
+
+  }
+
+  Object.keys(localStorage)
+
+    .filter(key => key.startsWith(appState.currentProject + '/') && key !== 'current')
+
+    .forEach(key => {
+
+      const data = JSON.parse(localStorage.getItem(key));
+
+      const newKey = newProjectName + key.slice(appState.currentProject.length);
+
+      localStorage.setItem(newKey, JSON.stringify(data));
+
+      localStorage.removeItem(key);
+
+    });
+
+  addDebugMessage(`Projeto renomeado de "${appState.currentProject}" para "${newProjectName}"`);
+
+  appState.currentProject = newProjectName;
+
+  updateProjectList();
+
+  updateFileList();
+
+  closeRenameModal();
+
+}
+
+// Função para alternar projeto
+
+function switchProject() {
+
+  appState.currentProject = document.getElementById('currentProject').value;
+
+  addDebugMessage(`Projeto alterado para "${appState.currentProject || 'Nenhum'}"`);
+
+  updateProjectList();
+
+  updateFileList();
+
+}
+
+// Função para limpar projeto atual
+
+function clearCurrentProject() {
+
+  if (!appState.currentProject) {
+
+    showErrorModal('Nenhum projeto selecionado!');
+
+    addDebugMessage('Erro: Nenhum projeto selecionado para limpeza.', 'error');
+
+    return;
+
+  }
+
+  if (!confirm(`Tem certeza que deseja limpar todos os arquivos do projeto "${appState.currentProject}"? Esta ação não pode ser desfeita.`)) {
+
+    return;
+
+  }
+
+  Object.keys(localStorage)
+
+    .filter(key => key.startsWith(appState.currentProject + '/') && key !== 'current')
+
+    .forEach(key => localStorage.removeItem(key));
+
+  addDebugMessage(`Projeto "${appState.currentProject}" limpo.`);
+
+  appState.currentProject = '';
+
+  updateProjectList();
+
+  updateFileList();
+
+}
+
+// Função para excluir arquivo individual
+
+function deleteFile(key) {
+
+  if (!confirm(`Tem certeza que deseja excluir o arquivo "${key.split('/').pop()}"? Esta ação não pode ser desfeita.`)) {
+
+    return;
+
+  }
+
+  localStorage.removeItem(key);
+
+  addDebugMessage(`Arquivo excluído: ${key}`);
+
+  updateFileList();
+
+}
+
+// Debounce para filterFiles
+
+function debounce(func, wait) {
+
+  let timeout;
+
+  return function executedFunction(...args) {
+
+    const later = () => {
+
+      clearTimeout(timeout);
+
+      func(...args);
+
     };
-    if (modeFiles[language] && !document.querySelector(`script[src="${modeFiles[language]}"]`)) {
-      const script = document.createElement('script');
-      script.src = modeFiles[language];
-      script.async = true;
-      document.head.appendChild(script);
-    }
+
+    clearTimeout(timeout);
+
+    timeout = setTimeout(later, wait);
+
   };
 
-  // Detecção automática de linguagem
-  const detectLanguage = (content) => {
-    if (content.startsWith('<?php')) return 'php';
-    if (content.match(/^\s*SELECT\s/i)) return 'sql';
-    if (content.match(/^\s*class\s.*\s{.*$/)) return 'typescript';
-    if (content.match(/^\s*def\s/)) return 'python';
-    if (content.match(/^\s*#/)) return 'markdown';
-    if (content.match(/^\s*<\w+/)) return 'html';
-    if (content.match(/^\s*\w+\s*:/)) return 'css';
-    if (content.match(/^\s*func\s/)) return 'go';
-    if (content.match(/^\s*def\s.*\(.*\):/)) return 'ruby';
-    if (content.match(/^\s*\/\/.*$/)) return 'clike';
-    try {
-      JSON.parse(content);
-      return 'json';
-    } catch {
-      return 'javascript';
-    }
-  };
+}
 
-  // Atualiza o modo com base no conteúdo
-  const updateMode = () => {
-    const content = editor.getValue();
-    const detected = detectLanguage(content);
-    currentMode = detected;
-    loadMode(detected);
-    setTimeout(() => editor.setOption('mode', modeMap[detected]), 100);
-  };
+// Função para listar arquivos do projeto atual
 
-  // Cache de snippets no localStorage
-  const snippets = JSON.parse(localStorage.getItem('snippets')) || {
-    javascript: { 'for': 'for (let i = 0; i < 10; i++) {\n  \n}', 'func': 'function myFunction() {\n  \n}' },
-    python: { 'def': 'def my_function():\n    pass', 'for': 'for i in range(10):\n    pass' },
-    ruby: { 'def': 'def my_method\n  \nend', 'each': 'array.each do |item|\n  \nend' },
-    go: { 'func': 'func myFunction() {\n  \n}', 'for': 'for i := 0; i < 10; i++ {\n  \n}' },
-    sql: { 'select': 'SELECT * FROM table WHERE condition;' },
-    php: { 'function': '<?php\nfunction myFunction() {\n  \n}\n?>' },
-    typescript: { 'interface': 'interface MyInterface {\n  \n}' }
-  };
-  localStorage.setItem('snippets', JSON.stringify(snippets));
+function updateFileList(searchTerm = '') {
 
-  CodeMirror.registerHelper('hint', 'customSnippets', (editor) => {
-    const cursor = editor.getCursor();
-    const token = editor.getTokenAt(cursor);
-    const matches = Object.keys(snippets[currentMode] || {}).filter(key => key.startsWith(token.string));
-    if (matches.length) {
-      return {
-        list: matches.map(key => ({
-          text: snippets[currentMode][key],
-          displayText: key
-        })),
-        from: CodeMirror.Pos(cursor.line, token.start),
-        to: CodeMirror.Pos(cursor.line, token.end)
-      };
-    }
+  const fileTree = document.getElementById('fileTree');
+
+  const fileCount = document.getElementById('fileCount');
+
+  fileTree.innerHTML = '';
+
+  const files = Object.keys(localStorage)
+
+    .filter(key => !key.startsWith('__') && key !== 'current' && (!appState.currentProject || key.startsWith(appState.currentProject + '/'))
+
+      && (!searchTerm || key.toLowerCase().includes(searchTerm.toLowerCase())));
+
+  // Atualizar contador de arquivos com atraso para acessibilidade
+
+  setTimeout(() => {
+
+    fileCount.textContent = `Arquivos: ${files.length}`;
+
+  }, 100);
+
+  const tree = {};
+
+  files.forEach(key => {
+
+    const parts = key.split('/').slice(appState.currentProject ? 1 : 0);
+
+    let current = tree;
+
+    parts.forEach((part, index) => {
+
+      if (!current[part]) {
+
+        current[part] = index === parts.length - 1 ? key : {};
+
+      }
+
+      current = current[part];
+
+    });
+
   });
 
-  // Atualiza pré-visualização com requestAnimationFrame
-  const updatePreview = () => {
-    requestAnimationFrame(() => {
-      const language = currentMode;
-      const code = editor.getValue();
-      try {
-        if (language === 'html') {
-          previewDiv.innerHTML = code;
-        } else if (language === 'markdown') {
-          const converter = new showdown.Converter();
-          previewDiv.innerHTML = converter.makeHtml(code);
-        } else {
-          previewDiv.innerHTML = '<p>Pré-visualização não suportada para esta linguagem.</p>';
-        }
-        if (language === 'javascript' && previewVisible) {
-          consoleDiv.innerHTML = '';
-          const originalConsoleLog = console.log;
-          console.log = (...args) => {
-            consoleDiv.innerHTML += args.join(' ') + '<br>';
-          };
-          try {
-            eval(code);
-          } catch (e) {
-            consoleDiv.innerHTML = `Erro: ${e.message}`;
-          }
-          console.log = originalConsoleLog;
-        }
-      } catch (e) {
-        previewDiv.innerHTML = '<p>Erro na pré-visualização.</p>';
-      }
-    });
-  };
+  function renderTree(obj, parentUl, path = '') {
 
-  // Carrega histórico
-  const loadHistory = () => {
-    historyList.innerHTML = '';
-    history.forEach((item, index) => {
+    Object.keys(obj).sort().forEach(name => {
+
       const li = document.createElement('li');
-      li.innerHTML = `${item.name}${item.extension} (${item.language}) 
-        <button onclick="loadFile(${index})" aria-label="Carregar ${item.name}${item.extension}">Carregar</button>
-        <button onclick="deleteFile(${index})" aria-label="Excluir ${item.name}${item.extension}">Excluir</button>`;
-      historyList.appendChild(li);
-    });
-  };
 
-  // Exibe linguagens suportadas
-  const loadLanguages = () => {
-    languagesList.innerHTML = '';
-    Object.keys(modeMap).forEach(lang => {
-      const li = document.createElement('li');
-      li.textContent = lang.charAt(0).toUpperCase() + lang.slice(1);
-      languagesList.appendChild(li);
-    });
-  };
+      li.setAttribute('role', 'treeitem');
 
-  // Valida nomes de arquivos
-  const validateFileName = (name) => {
-    const invalidChars = /[\/\\:*?"<>|]/;
-    return !invalidChars.test(name) && name.trim() !== '';
-  };
+      const fullPath = path ? `${path}/${name}` : name;
 
-  // Carrega arquivo do histórico
-  window.loadFile = (index) => {
-    try {
-      const item = history[index];
-      editor.setValue(item.content);
-      currentMode = item.language;
-      loadMode(item.language);
-      setTimeout(() => editor.setOption('mode', modeMap[item.language]), 100);
-      alert(`Arquivo ${item.name}${item.extension} carregado.`);
-    } catch (e) {
-      alert('Erro ao carregar arquivo.');
-    }
-  };
+      if (typeof obj[name] === 'string') {
 
-  // Exclui arquivo do histórico
-  window.deleteFile = (index) => {
-    if (confirm(`Excluir ${history[index].name}${history[index].extension}?`)) {
-      history.splice(index, 1);
-      localStorage.setItem('codeHistory', LZString.compress(JSON.stringify(history)));
-      loadHistory();
-      alert('Arquivo excluído.');
-    }
-  };
+        li.innerHTML = `
 
-  // Eventos
-  editor.on('change', () => {
-    updateMode();
-    if (previewVisible) updatePreview();
-  });
+          <button type="button" onclick="loadFile('${obj[name]}')" aria-label="Carregar arquivo ${name}">${name}</button>
 
-  themeSelect.addEventListener('change', () => {
-    editor.setOption('theme', themeSelect.value);
-  });
+          <button type="button" class="delete-button" onclick="deleteFile('${obj[name]}')" aria-label="Excluir arquivo ${name}">Excluir</button>
 
-  saveButton.addEventListener('click', () => {
-    const name = prompt('Digite o nome do arquivo:');
-    if (name && validateFileName(name)) {
-      const extension = prompt('Digite a extensão (ex.: .js, .json):', extensionMap[currentMode]);
-      if (!extension.startsWith('.')) {
-        alert('A extensão deve começar com um ponto (ex.: .js).');
-        return;
-      }
-      const content = editor.getValue();
-      const language = currentMode;
-      history.push({ name, extension, content, language });
-      localStorage.setItem('codeHistory', LZString.compress(JSON.stringify(history)));
-      loadHistory();
-      alert(`Arquivo ${name}${extension} salvo.`);
-    } else {
-      alert('Nome de arquivo inválido.');
-    }
-  });
+        `;
 
-  downloadButton.addEventListener('click', () => {
-    const name = prompt('Digite o nome do arquivo:');
-    if (name && validateFileName(name)) {
-      const extension = prompt('Digite a extensão (ex.: .js, .json):', extensionMap[currentMode]);
-      if (!extension.startsWith('.')) {
-        alert('A extensão deve começar com um ponto (ex.: .js).');
-        return;
-      }
-      const code = editor.getValue();
-      const blob = new Blob([code], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${name}${extension}`;
-      a.click();
-      URL.revokeObjectURL(url);
-      alert('Arquivo baixado.');
-    } else {
-      alert('Nome de arquivo inválido.');
-    }
-  });
-
-  exportButton.addEventListener('click', () => {
-    const name = prompt('Digite o nome do arquivo ZIP:');
-    if (name && validateFileName(name)) {
-      if (typeof JSZip === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'lib/jszip/jszip.min.js';
-        script.async = true;
-        script.onload = () => exportZip(name);
-        document.head.appendChild(script);
       } else {
-        exportZip(name);
+
+        li.innerHTML = `<span aria-label="Pasta ${name}">${name}</span>`;
+
+        li.setAttribute('aria-expanded', 'false');
+
+        li.addEventListener('click', () => toggleFolder(li));
+
+        const ul = document.createElement('ul');
+
+        ul.setAttribute('role', 'group');
+
+        renderTree(obj[name], ul, fullPath);
+
+        li.appendChild(ul);
+
       }
-    } else {
-      alert('Nome de arquivo inválido.');
-    }
-  });
 
-  const exportZip = (name) => {
+      parentUl.appendChild(li);
+
+    });
+
+  }
+
+  const rootUl = document.createElement('ul');
+
+  rootUl.setAttribute('role', 'group');
+
+  renderTree(tree, rootUl);
+
+  fileTree.appendChild(rootUl);
+
+}
+
+// Função para filtrar arquivos com debounce
+
+const filterFiles = debounce(() => {
+
+  const searchTerm = document.getElementById('fileSearch').value;
+
+  updateFileList(searchTerm);
+
+}, 300);
+
+// Função para carregar arquivo
+
+function loadFile(key) {
+
+  try {
+
+    const data = JSON.parse(localStorage.getItem(key));
+
+    appState.editor.setValue(data.content || '');
+
+    addDebugMessage(`Arquivo carregado: ${key}`);
+
+  } catch (e) {
+
+    addDebugMessage(`Erro ao carregar arquivo ${key}: ${e.message}`, 'error');
+
+  }
+
+}
+
+// Função para alternar visibilidade de pastas
+
+function toggleFolder(li) {
+
+  const isExpanded = li.getAttribute('aria-expanded') === 'true';
+
+  li.setAttribute('aria-expanded', !isExpanded);
+
+  const ul = li.querySelector('ul');
+
+  if (ul) ul.style.display = isExpanded ? 'none' : 'block';
+
+}
+
+// Função para pré-visualizar o projeto atual
+
+function previewProject() {
+
+  if (!appState.currentProject) {
+
+    showErrorModal('Selecione um projeto para pré-visualizar!');
+
+    addDebugMessage('Erro: Nenhum projeto selecionado para pré-visualização.', 'error');
+
+    return;
+
+  }
+
+  const previewFrame = document.getElementById('previewFrame');
+
+  const previewSection = document.getElementById('previewSection');
+
+  let htmlContent = '';
+
+  let cssContent = '';
+
+  let jsContent = '';
+
+  let markdownContent = '';
+
+  let jsonContent = '';
+
+  // Coletar todos os arquivos do projeto atual
+
+  const files = Object.keys(localStorage)
+
+    .filter(key => key.startsWith(appState.currentProject + '/') && key !== 'current');
+
+  files.forEach(key => {
+
     try {
-      const zip = new JSZip();
-      history.forEach(item => {
-        zip.file(`${item.name}${item.extension}`, item.content);
-      });
-      zip.file(`current-code${extensionMap[currentMode]}`, editor.getValue());
-      zip.generateAsync({ type: 'blob' }).then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${name}.zip`;
-        a.click();
-        URL.revokeObjectURL(url);
-        alert('ZIP exportado.');
-      });
-    } catch (e) {
-      alert('Erro ao exportar ZIP.');
-    }
-  };
 
-  exportTxtButton.addEventListener('click', () => {
-    const name = prompt('Digite o nome do arquivo TXT:');
-    if (name && validateFileName(name)) {
-      const code = editor.getValue();
-      const blob = new Blob([code], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${name}.txt`;
-      a.click();
-      URL.revokeObjectURL(url);
-      alert('Arquivo TXT exportado.');
-    } else {
-      alert('Nome de arquivo inválido.');
-    }
-  });
+      const data = JSON.parse(localStorage.getItem(key));
 
-  exportMdButton.addEventListener('click', () => {
-    const name = prompt('Digite o nome do arquivo MD:');
-    if (name && validateFileName(name)) {
-      const code = editor.getValue();
-      const blob = new Blob([code], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${name}.md`;
-      a.click();
-      URL.revokeObjectURL(url);
-      alert('Arquivo MD exportado.');
-    } else {
-      alert('Nome de arquivo inválido.');
-    }
-  });
+      if (!data.content) {
 
-  formatButton.addEventListener('click', () => {
-    const language = currentMode;
-    const code = editor.getValue();
-    try {
-      let formatted;
-      if (['javascript', 'json', 'typescript'].includes(language)) {
-        formatted = prettier.format(code, { parser: 'babel', semi: true });
-      } else if (language === 'html') {
-        formatted = prettier.format(code, { parser: 'html' });
-      } else if (language === 'css') {
-        formatted = prettier.format(code, { parser: 'css' });
-      } else {
-        alert('Formatação não suportada para esta linguagem.');
+        addDebugMessage(`Aviso: Arquivo ${key} está vazio.`, 'error');
+
         return;
+
       }
-      editor.setValue(formatted);
-      alert('Código formatado.');
+
+      const fileName = key.split('/').pop().toLowerCase();
+
+      if (fileName.endsWith('.html')) {
+
+        htmlContent += data.content;
+
+      } else if (fileName.endsWith('.css')) {
+
+        cssContent += data.content;
+
+      } else if (fileName.endsWith('.js')) {
+
+        jsContent += data.content;
+
+      } else if (fileName.endsWith('.md')) {
+
+        markdownContent += marked.parse(data.content);
+
+      } else if (fileName.endsWith('.json')) {
+
+        try {
+
+          const parsedJson = JSON.parse(data.content);
+
+          jsonContent += `<pre>${JSON.stringify(parsedJson, null, 2)}</pre>`;
+
+        } catch (e) {
+
+          addDebugMessage(`Erro ao formatar JSON em ${key}: ${e.message}`, 'error');
+
+        }
+
+      }
+
     } catch (e) {
-      alert('Erro ao formatar o código.');
+
+      addDebugMessage(`Erro ao processar arquivo ${key}: ${e.message}`, 'error');
+
     }
+
   });
 
-  togglePreviewButton.addEventListener('click', () => {
-    previewVisible = !previewVisible;
-    previewDiv.style.display = previewVisible ? 'block' : 'none';
-    consoleDiv.style.display = previewVisible && currentMode === 'javascript' ? 'block' : 'none';
-    if (previewVisible) updatePreview();
-  });
+  // Construir conteúdo da pré-visualização
 
-  clearButton.addEventListener('click', () => {
-    if (confirm('Tem certeza que deseja limpar o editor?')) {
-      editor.setValue('');
-      currentMode = 'javascript';
-      loadMode(currentMode);
-      setTimeout(() => editor.setOption('mode', modeMap[currentMode]), 100);
-      alert('Editor limpo.');
+  const previewContent = `
+
+    <!DOCTYPE html>
+
+    <html>
+
+    <head>
+
+      <style>
+
+        ${cssContent}
+
+        pre { font-family: monospace; background: #f5f5f5; padding: 10px; border: 1px solid #ccc; }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      ${htmlContent}
+
+      ${markdownContent}
+
+      ${jsonContent}
+
+      <script>
+
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+
+          window.parent.postMessage({
+
+            type: 'debug',
+
+            message: 'Erro JavaScript: ' + msg + ' (Linha: ' + lineNo + ', Coluna: ' + columnNo + ')'
+
+          }, '*');
+
+          return false;
+
+        };
+
+        try {
+
+          ${jsContent}
+
+        } catch (e) {
+
+          window.parent.postMessage({
+
+            type: 'debug',
+
+            message: 'Erro ao executar JavaScript: ' + e.message
+
+          }, '*');
+
+        }
+
+      </script>
+
+    </body>
+
+    </html>
+
+  `;
+
+  // Exibir pré-visualização
+
+  try {
+
+    previewFrame.srcdoc = previewContent;
+
+    previewSection.style.display = 'block';
+
+    addDebugMessage(`Pré-visualização do projeto "${appState.currentProject}" iniciada.`);
+
+  } catch (e) {
+
+    showErrorModal('Erro ao gerar pré-visualização: ' + e.message);
+
+    addDebugMessage(`Erro na pré-visualização: ${e.message}`, 'error');
+
+  }
+
+}
+
+// Capturar mensagens de erro do iframe
+
+window.addEventListener('message', event => {
+
+  if (event.origin !== window.location.origin) return;
+
+  if (event.data.type === 'debug') {
+
+    addDebugMessage(event.data.message, 'error');
+
+  }
+
+});
+
+// Função para fechar pré-visualização
+
+function closePreview() {
+
+  document.getElementById('previewSection').style.display = 'none';
+
+  document.getElementById('previewFrame').srcdoc = '';
+
+  addDebugMessage('Pré-visualização fechada.');
+
+}
+
+// Função para exportar projeto como ZIP
+
+function exportProjectAsZip() {
+
+  if (!appState.currentProject) {
+
+    showErrorModal('Selecione um projeto para exportar!');
+
+    addDebugMessage('Erro: Nenhum projeto selecionado para exportação.', 'error');
+
+    return;
+
+  }
+
+  const JSZip = window.JSZip;
+
+  const zip = new JSZip();
+
+  const files = Object.keys(localStorage)
+
+    .filter(key => key.startsWith(appState.currentProject + '/') && key !== 'current');
+
+  files.forEach(key => {
+
+    try {
+
+      const data = JSON.parse(localStorage.getItem(key));
+
+      const filePath = key.slice(appState.currentProject.length + 1);
+
+      zip.file(filePath, data.content);
+
+    } catch (e) {
+
+      addDebugMessage(`Erro ao adicionar arquivo ${key} ao ZIP: ${e.message}`, 'error');
+
     }
+
   });
 
-  languagesButton.addEventListener('click', () => {
-    languagesSection.style.display = 'block';
-    loadLanguages();
+  zip.generateAsync({ type: 'blob' }).then(blob => {
+
+    const link = document.createElement('a');
+
+    link.href = URL.createObjectURL(blob);
+
+    link.download = `${appState.currentProject}.zip`;
+
+    link.click();
+
+    URL.revokeObjectURL(link.href);
+
+    addDebugMessage(`Projeto "${appState.currentProject}" exportado como ZIP.`);
+
   });
 
-  closeLanguagesButton.addEventListener('click', () => {
-    languagesSection.style.display = 'none';
-  });
+}
 
-  helpButton.addEventListener('click', () => {
-    helpSection.style.display = 'block';
-  });
+// Função para alterar tema
 
-  closeHelpButton.addEventListener('click', () => {
-    helpSection.style.display = 'none';
-  });
+function setTheme(theme) {
 
-  autocompleteButton.addEventListener('click', () => {
-    editor.execCommand('autocomplete');
-  });
+  appState.editor.setOption('theme', theme);
 
-  loadHistory();
+  localStorage.setItem('theme', theme);
+
+  addDebugMessage(`Tema alterado para "${theme}"`);
+
+}
+
+// Inicializar editor, projetos e arquivos
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  initEditor();
+
+  const savedTheme = localStorage.getItem('theme') || 'default';
+
+  setTheme(savedTheme);
+
+  document.getElementById('themeSelect').value = savedTheme;
+
+  updateProjectList();
+
+  updateFileList();
+
+  addDebugMessage('Aplicação iniciada.');
+
 });
