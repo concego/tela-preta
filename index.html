@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tela Preta - Editor de Código Acessível | Euconcegojogar</title>
+    <meta name="description" content="Editor de código web acessível criado pelo Euconcegojogar. Desenvolva jogos e aplicações web com foco em acessibilidade, direto no navegador!">
+    <meta name="keywords" content="editor código, acessibilidade, jogos inclusivos, desenvolvimento web, TalkBack, Euconcegojogar">
+    <meta name="author" content="Euconcegojogar">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://euconcegojogar.github.io/tela-preta/">
+    <meta property="og:title" content="Tela Preta - Editor de Código Acessível">
+    <meta property="og:description" content="Editor de código web acessível criado pelo Euconcegojogar. Desenvolva com foco em inclusão!">
+    <meta property="og:image" content="https://euconcegojogar.github.io/tela-preta/preview.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://euconcegojogar.github.io/tela-preta/">
+    <meta property="twitter:title" content="Tela Preta - Editor de Código Acessível">
+    <meta property="twitter:description" content="Editor de código web acessível criado pelo Euconcegojogar. Desenvolva com foco em inclusão!">
+    <meta property="twitter:image" content="https://euconcegojogar.github.io/tela-preta/preview.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiMwMGZmMDAiLz4KPHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHRleHQgeD0iMTIiIHk9IjE2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiMwMDAiPvCfkIk8L3RleHQ+Cjwvc3ZnPgo8L3N2Zz4K">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ff00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tela Preta">
+    
+    <!-- Analytics placeholder -->
+    <!-- Google Analytics seria adicionado aqui -->
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #00ff00;
+            --dark-bg: #0a0a0a;
+            --darker-bg: #1a1a1a;
+            --panel-bg: #111;
+            --border-color: #333;
+            --text-primary: #00ff00;
+            --text-secondary: #888;
+            --button-hover: #00cc00;
+            --error-color: #ff4444;
+            --success-color: #00ff00;
+            --warning-color: #ffaa00;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.4;
+        }
+
+        .header {
+            background: rgba(0, 255, 0, 0.1);
+            padding: 15px;
+            border-bottom: 2px solid var(--primary-green);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            animation: pulse 2s ease-in-out infinite;
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .title {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .title h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px var(--primary-green);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .version {
+            background: rgba(0, 255, 0, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #000;
+            background-color: var(--primary-green);
+            font-weight: bold;
+        }
+
+        .toolbar {
+            background: rgba(0, 255, 0, 0.05);
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            background: var(--primary-green);
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-family: inherit;
+            min-width: 80px;
+        }
+
+        .btn:hover {
+            background: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 255, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:focus {
+            outline: 2px solid var(--primary-green);
+            outline-offset: 2px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 140px);
+            gap: 2px;
+        }
+
+        .editor-panel {
+            flex: 1;
+            min-width: 300px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .preview-panel {
+            flex: 1;
+            min-width: 300px;
+            background: #fff;
+            position: relative;
+            border-radius: 0 4px 4px 0;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #222;
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: bold;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor {
+            flex: 1;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            border: none;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            overflow-y: auto;
+            tab-size: 2;
+        }
+
+        .editor:focus {
+            background: var(--panel-bg);
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
+        }
+
+        .preview-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+        }
+
+        .tabs {
+            display: flex;
+            background: #222;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: var(--border-color);
+            color: var(--text-secondary);
+            border: none;
+            cursor: pointer;
+            border-right: 1px solid #555;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            white-space: nowrap;
+            min-width: 80px;
+        }
+
+        .tab.active {
+            background: var(--primary-green);
+            color: #000;
+            font-weight: bold;
+        }
+
+        .tab:hover:not(.active) {
+            background: #444;
+            color: var(--text-primary);
+        }
+
+        .tab:focus {
+            outline: 2px solid var(--primary-green);
+            outline-offset: -2px;
+        }
+
+        .status-bar {
+            background: #222;
+            padding: 8px 15px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            bottom: 0;
+            z-index: 50;
+        }
+
+        .status-indicator {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .status-indicator.warning {
+            color: var(--warning-color);
+        }
+
+        .status-indicator.error {
+            color: var(--error-color);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border-color);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-section {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 4px;
+            border-left: 4px solid var(--primary-green);
+        }
+
+        .sidebar-section.tips {
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .sidebar-section.shortcuts {
+            background: rgba(0, 255, 0, 0.05);
+        }
+
+        .sidebar-section.social {
+            background: rgba(0, 255, 0, 0.05);
+            text-align: center;
+        }
+
+        .sidebar-section h4 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .sidebar-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .sidebar-section li {
+            margin: 4px 0;
+            padding: 2px 0;
+            font-size: 12px;
+        }
+
+        .sidebar-section kbd {
+            background: var(--border-color);
+            color: var(--text-primary);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-right: 8px;
+        }
+
+        .social-links a {
+            display: inline-block;
+            margin: 6px 8px;
+            padding: 8px 12px;
+            background: var(--border-color);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            border: 1px solid #555;
+        }
+
+        .social-links a:hover {
+            background: var(--primary-green);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 255, 0, 0.3);
+        }
+
+        .social-links a:focus {
+            outline: 2px solid var(--primary-green);
+            outline-offset: 2px;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .error-message {
+            background: rgba(255, 68, 68, 0.1);
+            color: var(--error-color);
+            padding: 10px;
+            margin: 10px;
+            border-radius: 4px;
+            border-left: 4px solid var(--error-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .editor-panel {
+                min-height: 400px;
+            }
+            
+            .preview-panel {
+                min-height: 300px;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-height: 300px;
+            }
+            
+            .header {
+                text-align: center;
+                justify-content: center;
+            }
+            
+            .title h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .toolbar {
+                gap: 5px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 12px;
+                min-width: 60px;
+            }
+            
+            .sidebar-section {
+                margin: 5px;
+                padding: 8px;
+            }
+        }
+
+        /* Modo escuro aprimorado */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-green: #00ff00;
+                --dark-bg: #000;
+                --darker-bg: #111;
+            }
+        }
+
+        /* Animações aprimoradas */
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .sidebar {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Melhorias de acessibilidade */
+        .screen-reader-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: var(--primary-green);
+            color: #000;
+            padding: 8px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 1000;
+        }
+
+        .skip-link:focus {
+            top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+    
+    <header class="header">
+        <div class="logo" 
+             role="img" 
+             aria-label="Concego, o mascote do Euconcegojogar: um dragão verde cartoon usando óculos de sol escuros e headset gamer preto. Ele tem uma expressão confiante e carismática, representando diversão e inclusão nos jogos"
+             tabindex="0">🐉</div>
+        <div class="title">
+            <h1>Tela Preta</h1>
+            <div class="subtitle">Editor de Código Acessível - Euconcegojogar</div>
+        </div>
+        <div class="version">v1.0.0</div>
+    </header>
+
+    <nav class="toolbar" role="toolbar" aria-label="Barra de ferramentas do editor">
+        <button class="btn" id="newFile" aria-label="Criar novo arquivo" title="Criar novo arquivo">📄 Novo</button>
+        <button class="btn" id="saveFile" aria-label="Salvar arquivo atual" title="Salvar arquivo (Ctrl+S)">💾 Salvar</button>
+        <button class="btn" id="runCode" aria-label="Executar código no preview" title="Executar código (Ctrl+Enter)">▶️ Executar</button>
+        <button class="btn" id="clearEditor" aria-label="Limpar editor" title="Limpar conteúdo do editor">🗑️ Limpar</button>
+        <button class="btn" id="insertTemplate" aria-label="Inserir template HTML básico" title="Inserir template HTML">📝 Template</button>
+        <button class="btn" id="togglePreview" aria-label="Mostrar/ocultar preview" title="Alternar visualização">👁️ Preview</button>
+        <button class="btn" id="toggleSidebar" aria-label="Mostrar/ocultar barra lateral" title="Alternar barra lateral">📋 Ajuda</button>
+    </nav>
+
+    <main id="main-content" class="container">
+        <section class="editor-panel" aria-label="Painel do editor">
+            <div class="tabs" role="tablist" aria-label="Tipos de arquivo">
+                <button class="tab active" id="tab-html" role="tab" aria-selected="true" aria-controls="panel-html">HTML</button>
+                <button class="tab" id="tab-css" role="tab" aria-selected="false" aria-controls="panel-css">CSS</button>
+                <button class="tab" id="tab-js" role="tab" aria-selected="false" aria-controls="panel-js">JavaScript</button>
+            </div>
+            
+            <div class="panel-header">
+                <span id="current-file">index.html</span>
+                <span class="status-indicator" id="save-status">Salvo</span>
+            </div>
+            
+            <div class="screen-reader-only" id="editor-announcements" aria-live="polite" aria-atomic="true"></div>
+            
+            <textarea 
+                class="editor" 
+                id="editor" 
+                role="textbox" 
+                aria-multiline="true"
+                aria-label="Editor de código - digite seu código aqui"
+                placeholder="<!-- Bem-vindo ao Tela Preta! Comece digitando seu código aqui -->"
+                spellcheck="false"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+            ></textarea>
+        </section>
+
+        <section class="preview-panel" id="previewPanel" aria-label="Painel de visualização">
+            <div class="panel-header">
+                <span>🖥️ Preview</span>
+                <span id="preview-status">Pronto</span>
+            </div>
+            <div class="loading" id="preview-loading" style="display: none;">Carregando preview...</div>
+            <iframe 
+                class="preview-frame" 
+                id="preview" 
+                title="Preview do código em tempo real"
+                sandbox="allow-scripts allow-same-origin"
+            ></iframe>
+        </section>
+
+        <aside class="sidebar" id="sidebar" aria-label="Painel de ajuda e informações">
+            <div class="sidebar-section tips">
+                <h4>💡 Dicas Rápidas</h4>
+                <p>Use o botão "Template" para começar com uma estrutura HTML básica. O código é salvo automaticamente no seu navegador!</p>
+            </div>
+            
+            <div class="sidebar-section shortcuts">
+                <h4>🎮 Atalhos de Teclado</h4>
+                <ul>
+                    <li><kbd>Ctrl</kbd> + <kbd>S</kbd> - Salvar arquivo</li>
+                    <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> - Executar código</li>
+                    <li><kbd>F5</kbd> - Atualizar preview</li>
+                    <li><kbd>Alt</kbd> + <kbd>1/2/3</kbd> - Trocar aba</li>
+                    <li><kbd>Ctrl</kbd> + <kbd>Z</kbd> - Desfazer</li>
+                    <li><kbd>Ctrl</kbd> + <kbd>Y</kbd> - Refazer</li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section social">
+                <h4>🌟 Siga o Euconcegojogar</h4>
+                <div class="social-links">
+                    <a href="https://youtube.com/euconcegojogar" target="_blank" rel="noopener noreferrer" aria-label="Canal do Euconcegojogar no YouTube">📺 YouTube</a>
+                    <a href="https://facebook.com/euconcegojogar" target="_blank" rel="noopener noreferrer" aria-label="Página do Euconcegojogar no Facebook">📘 Facebook</a>
+                    <a href="https://instagram.com/Euconcegojogar" target="_blank" rel="noopener noreferrer" aria-label="Perfil do Euconcegojogar no Instagram">📸 Instagram</a>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <footer class="status-bar" role="contentinfo">
+        <div>
+            <span class="status-indicator" id="connection-status">●</span>
+            <span id="editor-mode">HTML</span> | 
+            <span id="line-info">Linha 1, Coluna 1</span> |
+            <span id="char-count">0 caracteres</span>
+        </div>
+        <div>
+            <span>Criado com 💚 pelo Euconcegojogar | v1.0.0</span>
+        </div>
+    </footer>
+
+    <script>
+        // Configurações e estado global
+        const CONFIG = {
+            version: '1.0.0',
+            autoSaveDelay: 1000,
+            maxFileSize: 1024 * 1024, // 1MB
+            supportedLanguages: ['html', 'css', 'js']
+        };
+
+        let currentTab = 'html';
+        let previewVisible = true;
+        let sidebarVisible = true;
+        let files = {
+            html: '<!-- Bem-vindo ao Tela Preta! -->\n<!-- Comece criando seu código aqui -->\n\n',
+            css: '/* Estilos CSS */\n',
+            js: '// JavaScript\n'
+        };
+
+        // Elementos do DOM
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const previewPanel = document.getElementById('previewPanel');
+        const sidebar = document.getElementById('sidebar');
+        const saveStatus = document.getElementById('save-status');
+        const previewStatus = document.getElementById('preview-status');
+        const currentFile = document.getElementById('current-file');
+        const editorMode = document.getElementById('editor-mode');
+        const lineInfo = document.getElementById('line-info');
+        const charCount = document.getElementById('char-count');
+        const connectionStatus = document.getElementById('connection-status');
+        const editorAnnouncements = document.getElementById('editor-announcements');
+        const previewLoading = document.getElementById('preview-loading');
+
+        // Utilitários
+        function announce(message) {
+            editorAnnouncements.textContent = message;
+            setTimeout(() => {
+                editorAnnouncements.textContent = '';
+            }, 1000);
+        }
+
+        function updateStatus(element, text, type = 'success') {
+            element.textContent = text;
+            element.className = `status-indicator ${type}`;
+            
+            setTimeout(() => {
+                element.className = 'status-indicator';
+            }, 2000);
+        }
+
+        function validateFileSize(content) {
+            return content.length <= CONFIG.maxFileSize;
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                loadFromStorage();
+                updateEditor();
+                updatePreview();
+                updateStats();
+                
+                // Verificar conexão
+                updateConnectionStatus();
+                
+                // Foco inicial no editor
+                editor.focus();
+                
+                announce('Tela Preta carregado com sucesso!');
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                showError('Erro ao carregar o editor. Recarregue a página.');
+            }
+        });
+
+        // Gerenciamento de abas
+        function switchTab(tabName) {
+            try {
+                if (!CONFIG.supportedLanguages.includes(tabName)) {
+                    throw new Error(`Linguagem não suportada: ${tabName}`);
+                }
+
+                // Validar tamanho do arquivo
+                if (!validateFileSize(editor.value)) {
+                    showError('Arquivo muito grande. Reduza o conteúdo.');
+                    return;
+                }
+
+                // Salvar conteúdo da aba atual
+                files[currentTab] = editor.value;
+                
+                // Trocar aba
+                currentTab = tabName;
+                
+                // Atualizar interface
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                    tab.setAttribute('aria-selected', 'false');
+                });
+                
+                const activeTab = document.getElementById(`tab-${tabName}`);
+                activeTab.classList.add('active');
+                activeTab.setAttribute('aria-selected', 'true');
+                
+                updateEditor();
+                updatePreview();
+                updateStats();
+                
+                announce(`Aba ${tabName.toUpperCase()} selecionada`);
+            } catch (error) {
+                console.error('Erro ao trocar aba:', error);
+                showError('Erro ao trocar aba.');
+            }
+        }
+
+        // Atualizar editor
+        function updateEditor() {
+            editor.value = files[currentTab];
+            currentFile.textContent = `index.${currentTab}`;
+            editorMode.textContent = currentTab.toUpperCase();
+            
+            // Atualizar syntax highlighting básico
+            updateSyntaxHighlighting();
+        }
+
+        function updateSyntaxHighlighting() {
+            // Implementação básica de destaque de sintaxe
+            // Em uma versão futura, poderia usar uma biblioteca como CodeMirror
+            const content = editor.value;
+            
+            // Verificar erros básicos
+            if (currentTab === 'html' && content.includes('<script>') && !content.includes('</script>')) {
+                updateStatus(saveStatus, 'Erro: script não fechado', 'error');
+            } else if (currentTab === 'css' && content.includes('{') && !content.includes('}')) {
+                updateStatus(saveStatus, 'Erro: chave não fechada', 'error');
+            }
+        }
+
+        // Atualizar preview
+        function updatePreview() {
+            try {
+                previewLoading.style.display = 'block';
+                
+                const htmlContent = `
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Preview - Tela Preta</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            .error { color: #ff4444; background: #ffeeee; padding: 10px; border-radius: 4px; margin: 10px 0; }
+                            ${files.css}
+                        </style>
+                    </head>
+                    <body>
+                        <div id="preview-content">
+                            ${files.html}
+                        </div>
+                        <script>
+                            try {
+                                ${files.js}
+                            } catch (error) {
+                                console.error('Erro no JavaScript:', error);
+                                document.getElementById('preview-content').innerHTML += 
+                                    '<div class="error">Erro no JavaScript: ' + error.message + '</div>';
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                
+                preview.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(htmlContent);
+                
+                setTimeout(() => {
+                    previewLoading.style.display = 'none';
+                    updateStatus(previewStatus, 'Atualizado');
+                }, 500);
+                
+            } catch (error) {
+                console.error('Erro no preview:', error);
+                previewLoading.style.display = 'none';
+                updateStatus(previewStatus,
