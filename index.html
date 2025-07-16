@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tela Preta IDE</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" role="complementary" aria-label="Navegação do Projeto e Ferramentas">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <img src="images/concego.png" alt="Logo Concego" style="max-width: 180px; height: auto; border-radius: 5px; box-shadow: 0 0 8px rgba(0,0,0,0.5);">
+            </div>
+            <h1>Tela Preta IDE</h1>
+            <p id="current-project-name">Nenhum Projeto Aberto</p>
+
+            <section class="sidebar-section project-management" aria-labelledby="project-heading">
+                <h2 id="project-heading">Projetos</h2>
+                <div class="project-controls">
+                    <button id="new-project-button" aria-label="Criar Novo Projeto">Novo Projeto</button>
+                    <button id="open-project-button" aria-label="Abrir Projeto Existente">Abrir Projeto</button>
+                    <button id="rename-project-button" aria-label="Renomear Projeto Atual">Renomear Projeto</button>
+                    <button id="delete-project-button" aria-label="Excluir Projeto Atual">Excluir Projeto</button>
+                </div>
+                <ul id="project-list" class="item-list" role="tree" aria-label="Lista de Projetos">
+                    <li>Selecione ou crie um projeto.</li>
+                </ul>
+            </section>
+
+            <section class="sidebar-section file-management" aria-labelledby="file-heading">
+                <h2 id="file-heading">Arquivos do Projeto</h2>
+                <div class="file-controls">
+                    <button id="new-file-button" aria-label="Criar Novo Arquivo ou Pasta">Novo Arquivo/Pasta</button>
+                    <button id="rename-file-button" aria-label="Renomear Arquivo ou Pasta Selecionado">Renomear Arquivo/Pasta</button>
+                    <button id="delete-file-button" aria-label="Excluir Arquivo ou Pasta Selecionado">Excluir Arquivo/Pasta</button>
+                </div>
+                <ul id="file-tree" class="item-list file-tree" role="tree" aria-label="Árvore de Arquivos do Projeto">
+                    <li>Nenhum projeto selecionado.</li>
+                </ul>
+            </section>
+
+            <section class="sidebar-section tools-section" aria-labelledby="tools-heading">
+                <h2 id="tools-heading">Ferramentas</h2>
+                <div class="tool-controls">
+                    <button id="run-code-button" aria-label="Executar Código no Preview">Executar Código</button>
+                    <button id="export-project-button" aria-label="Exportar Projeto como ZIP">Exportar Projeto</button>
+                </div>
+            </section>
+        </aside>
+
+        <main class="main-content" role="main">
+            <div class="editor-container">
+                <div id="editor-tabs" class="editor-tabs" role="tablist" aria-label="Abas do Editor">
+                    
+</div>
+                <textarea id="code-editor" aria-label="Editor de Código"></textarea>
+                <div class="editor-actions">
+                    <button id="save-file-button" aria-label="Salvar o conteúdo do arquivo atual">Salvar Arquivo</button>
+                    <button id="clear-file-button" aria-label="Limpar conteúdo do arquivo atual">Limpar Arquivo</button>
+                </div>
+            </div>
+
+            <div class="output-container" role="region" aria-label="Painel de Saída">
+                <div class="output-tabs" role="tablist" aria-label="Abas de Saída">
+                    <button id="preview-tab" class="active" role="tab" aria-selected="true" aria-controls="preview-iframe-panel">Preview</button>
+                    <button id="console-tab" role="tab" aria-selected="false" aria-controls="console-output-panel">Console</button>
+                </div>
+                <div id="preview-iframe" class="output-panel active" role="tabpanel" aria-labelledby="preview-tab">
+                    <iframe sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts" title="Visualização do Código"></iframe>
+                </div>
+                <pre id="console-output" class="output-panel" role="tabpanel" aria-labelledby="console-tab" aria-live="polite"></pre>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/css-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/javascript-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/jump-to-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.css"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/matchesonscrollbar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/matchesonscrollbar.css"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/match-highlighter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/selection/active-line.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>
