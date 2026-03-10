@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Tela Preta - Workspace</title>
+  <style>
+    /* Estilo mínimo para manter a IDE limpa e ocupar a tela toda */
+    body { margin: 0; background-color: #000; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+    
+    #editor { 
+      flex: 1; background: #000; color: #fff; border: none; font-size: 16px; padding: 10px; resize: none; outline: none;
+    }
+    
+    /* O leitor do NVDA fica aqui, invisível */
+    .sr-only { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+
+    /* --- A NOSSA PALETA DE COMANDOS (Entrada de Texto) --- */
+    #paleta-comandos {
+      display: none;
+      background-color: #111;
+      padding: 15px;
+      border-top: 1px solid #333;
+      align-items: center;
+    }
+    
+    #paleta-label {
+      color: #fff;
+      margin-right: 10px;
+      font-family: monospace;
+    }
+    
+    #paleta-input {
+      flex: 1;
+      background-color: #000;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+    
+    #paleta-input:focus { border-color: #888; }
+
+    /* --- NOVA: A NOSSA PALETA DE CONFIRMAÇÃO (Botões) --- */
+    #paleta-confirmacao {
+      display: none;
+      background-color: #111;
+      padding: 15px;
+      border-top: 1px solid #333;
+      align-items: center;
+    }
+
+    #confirmacao-label {
+      color: #fff;
+      margin-right: 15px;
+      font-family: monospace;
+    }
+
+    .btn-dialogo {
+      background-color: #333; 
+      color: #fff; 
+      border: 1px solid #555;
+      padding: 8px 16px; 
+      margin-right: 10px; 
+      font-size: 16px; 
+      cursor: pointer;
+    }
+
+    /* Feedback visual e acessível forte quando o botão recebe foco */
+    .btn-dialogo:focus { 
+      border-color: #fff; 
+      background-color: #555; 
+      outline: none; 
+    }
+  </style>
+</head>
+<body>
+  
+  <div id="leitor-status" aria-live="assertive" class="sr-only"></div>
+
+  <textarea id="editor" autofocus aria-label="Editor de código"></textarea>
+
+  <div id="paleta-comandos" aria-hidden="true">
+    <span id="paleta-label" aria-hidden="true">Comando:</span>
+    <input type="text" id="paleta-input">
+  </div>
+
+  <div id="paleta-confirmacao" aria-hidden="true" role="dialog" aria-labelledby="confirmacao-label">
+    <span id="confirmacao-label" aria-hidden="true">Tem certeza?</span>
+    <button id="btn-sim" class="btn-dialogo">Sim</button>
+    <button id="btn-nao" class="btn-dialogo">Não</button>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

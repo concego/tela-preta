@@ -1,0 +1,17 @@
+{
+  "name": "tela-preta",
+  "version": "1.0.0",
+  "description": "IDE Tela Preta - Foco em acessibilidade e teclado",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Anderson Carvalho",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^29.0.0"
+  },
+  "dependencies": {
+    "iconv-lite": "^0.7.2"
+  }
+}
