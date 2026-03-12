@@ -1,97 +1,97 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
-const fs = require('fs');
 const path = require('path');
+const { spawn } = require('child_process');
 
 let mainWindow;
-let terminalWindow;
+let terminalProcess = null;
+let workspaceAtual = null;
 
 function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
-
-  mainWindow.loadFile('index.html');
+    mainWindow = new BrowserWindow({
+        width: 1000,
+        height: 800,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+    mainWindow.loadFile('index.html');
 }
 
-function createTerminalWindow() {
-  if (terminalWindow) {
-    terminalWindow.focus();
-    return;
-  }
+app.whenReady().then(createWindow);
 
-  terminalWindow = new BrowserWindow({
-    width: 600,
-    height: 400,
-    autoHideMenuBar: true, 
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
-
-  terminalWindow.loadFile('terminal.html');
-
-  terminalWindow.on('closed', () => {
-    terminalWindow = null;
-    if (mainWindow) {
-      mainWindow.focus();
-    }
-  });
-}
-
-app.whenReady().then(() => {
-  createWindow();
-  
-  ipcMain.on('abrir-terminal', () => {
-    createTerminalWindow();
-  });
-
-  // Ouve o pedido para abrir PASTA (Workspace)
-  ipcMain.handle('abrir-pasta-workspace', async () => {
+// Gerenciamento de Pastas e Arquivos
+ipcMain.handle('abrir-pasta-workspace', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openDirectory'],
-      title: 'Selecione a pasta do seu projeto'
+        properties: ['openDirectory']
     });
-    
-    if (result.canceled) return null;
-
-    const folderPath = result.filePaths[0];
-    
-    try {
-      const items = fs.readdirSync(folderPath, { withFileTypes: true });
-      const conteudo = items.map(item => ({
-        nome: item.name,
-        isDiretorio: item.isDirectory()
-      }));
-
-      return {
-        caminho: folderPath,
-        nomePasta: path.basename(folderPath),
-        conteudo: conteudo
-      };
-    } catch (error) {
-      return { erro: 'Não foi possível ler a pasta.' };
+    if (!result.canceled && result.filePaths.length > 0) {
+        workspaceAtual = result.filePaths[0];
+        return { caminho: workspaceAtual, nomePasta: path.basename(workspaceAtual) };
     }
-  });
-
-  // --- A MÁGICA NOVA: Ouve o pedido para abrir ARQUIVO AVULSO ---
-  ipcMain.handle('abrir-arquivo-avulso', async () => {
-    const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openFile'],
-      title: 'Selecione um arquivo para abrir'
-    });
-    
-    if (result.canceled) return null;
-    return result.filePaths[0]; // Retorna o caminho exato do arquivo
-  });
-
+    return null;
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+ipcMain.handle('abrir-arquivo-avulso', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openFile']
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+        return result.filePaths[0];
+    }
+    return null;
+});
+
+// --- O NOVO MOTOR V8 DA CAIXA PRETA ---
+ipcMain.on('abrir-terminal', (event) => {
+    const terminalWin = new BrowserWindow({
+        width: 800,
+        height: 600,
+        title: 'Caixa Preta',
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+    
+    terminalWin.setMenu(null);
+    terminalWin.loadFile('terminal.html');
+
+    if (terminalProcess) {
+        terminalProcess.kill();
+    }
+
+    const pastaAlvo = workspaceAtual || process.env.USERPROFILE;
+
+    // A Mágica Bruta do UTF-8: chcp 65001 obriga o Windows a respeitar os acentos
+    terminalProcess = spawn('powershell.exe', ['-NoExit', '-NoLogo', '-Command', 'chcp 65001; [Console]::OutputEncoding=[System.Text.Encoding]::UTF8'], {
+        cwd: pastaAlvo,
+        shell: true 
+    });
+
+    terminalProcess.stdout.on('data', (data) => {
+        if (!terminalWin.isDestroyed()) {
+            terminalWin.webContents.send('terminal-output', data.toString('utf8'));
+        }
+    });
+
+    terminalProcess.stderr.on('data', (data) => {
+        if (!terminalWin.isDestroyed()) {
+            terminalWin.webContents.send('terminal-output', data.toString('utf8'));
+        }
+    });
+
+    ipcMain.removeAllListeners('terminal-input');
+    ipcMain.on('terminal-input', (e, comando) => {
+        if (terminalProcess) {
+            terminalProcess.stdin.write(comando + '\n');
+        }
+    });
+
+    terminalWin.on('closed', () => {
+        if (terminalProcess) {
+            terminalProcess.kill();
+            terminalProcess = null;
+        }
+    });
 });

@@ -1,109 +1,54 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Terminal ICQ</title>
-  <style>
-    /* Estilo limpo, focado só na caixa de texto */
-    body { margin: 0; background-color: #000; color: #fff; overflow: hidden; display: flex; flex-direction: column; height: 100vh;}
-    
-    /* white-space: pre-wrap garante que as quebras de linha do terminal original sejam respeitadas */
-    #output { flex: 1; padding: 10px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; outline: none; }
-    
-    /* Um leve feedback visual se a pessoa der o Shift+Tab */
-    #output:focus { border: 1px solid #555; }
-    
-    #input-comando { width: 100%; padding: 15px; background: #111; color: #fff; border: top 1px solid #333; outline: none; font-size: 16px; }
-    
-    /* O leitor do NVDA fica aqui, invisível */
-    .sr-only { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Caixa Preta</title>
+    <style>
+        body { background-color: #000; color: #fff; font-family: monospace; padding: 10px; display: flex; flex-direction: column; height: 90vh; }
+        textarea { flex-grow: 1; background: #111; color: #0f0; border: 1px solid #333; padding: 10px; resize: none; margin-bottom: 10px; }
+        input { padding: 10px; background: #222; color: #fff; border: 1px solid #555; font-family: monospace; font-size: 16px; }
+        input:focus { outline: 2px solid #fff; }
+    </style>
 </head>
 <body>
-  
-  <div id="leitor-status" aria-live="assertive" class="sr-only"></div>
-
-  <div id="output" tabindex="0" aria-label="Saída do terminal. Use as setas para ler.">Pronto para receber comandos...</div>
-  
-  <input type="text" id="input-comando" autofocus aria-label="Digite o comando do terminal">
-  
-  <script>
-    const { exec } = require('child_process');
-    const path = require('path');
-    const fs = require('fs');
-    const iconv = require('iconv-lite'); // Nossa nova arma contra o encoding ruim
+    <label for="saida">Caixa Preta - Histórico (Use as setas para ler):</label>
+    <textarea id="saida" readonly aria-label="Histórico da Caixa Preta"></textarea>
     
-    const inputComando = document.getElementById('input-comando');
-    const outputDiv = document.getElementById('output');
-    const leitorStatus = document.getElementById('leitor-status');
+    <label for="comando">Digite um comando e aperte Enter:</label>
+    <input type="text" id="comando" placeholder="Ex: npm install" autofocus autocomplete="off">
 
-    // Essa variável é a "memória" do nosso terminal para o comando CD funcionar
-    let currentDir = process.cwd();
+    <script>
+        const { ipcRenderer } = require('electron');
+        const saida = document.getElementById('saida');
+        const comando = document.getElementById('comando');
 
-    function falar(texto) {
-        leitorStatus.textContent = texto;
-        setTimeout(() => { leitorStatus.textContent = ''; }, 1000); 
-    }
-
-    // A mágica de fechar com o Esc 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            window.close();
+        // A Mágica de Acessibilidade: Arranca fora os códigos de cores do texto
+        function limparCores(texto) {
+            return texto.replace(/\x1b\[[0-9;]*m/g, '');
         }
-    });
 
-    // Escutando o Enter no campo de texto
-    inputComando.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            const comandoOriginal = inputComando.value.trim();
-            if (!comandoOriginal) return;
+        // Quando a "mangueira" jorra dados do PowerShell
+        ipcRenderer.on('terminal-output', (event, dados) => {
+            const textoLimpo = limparCores(dados);
+            saida.value += textoLimpo;
+            saida.scrollTop = saida.scrollHeight; // Desce a rolagem pro final automaticamente
+        });
 
-            inputComando.value = '';
-            
-            // Adiciona o comando que você digitou no histórico
-            outputDiv.textContent = `> ${comandoOriginal}\n\n` + outputDiv.textContent;
-
-            // --- LÓGICA DO COMANDO CD ---
-            if (comandoOriginal.toLowerCase().startsWith('cd ')) {
-                const novaPasta = comandoOriginal.substring(3).trim();
-                const caminhoResolvido = path.resolve(currentDir, novaPasta);
+        comando.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const cmd = comando.value.trim();
                 
-                // Verifica se a pasta realmente existe
-                if (fs.existsSync(caminhoResolvido) && fs.statSync(caminhoResolvido).isDirectory()) {
-                    currentDir = caminhoResolvido;
-                    falar('Pasta alterada');
-                    outputDiv.textContent = `Pasta atual: ${currentDir}\n\n` + outputDiv.textContent;
-                } else {
-                    falar('Erro: Pasta não encontrada');
-                    outputDiv.textContent = `[ERRO] O sistema não pode encontrar o caminho especificado.\n\n` + outputDiv.textContent;
+                // Truque pra limpar a tela rapidinho
+                if (cmd.toLowerCase() === 'clear' || cmd.toLowerCase() === 'cls') {
+                    saida.value = '';
+                    comando.value = '';
+                } else if (cmd !== '') {
+                    // Manda pro motor
+                    ipcRenderer.send('terminal-input', cmd);
+                    comando.value = '';
                 }
-                return; // Para a execução aqui, não precisa mandar pro sistema operacional
             }
-            // -----------------------------
-
-            falar('Executando comando...');
-            
-            // A grande sacada: pedimos o "buffer" cru (encoding: 'buffer') para traduzir nós mesmos
-            exec(comandoOriginal, { cwd: currentDir, encoding: 'buffer' }, (error, stdout, stderr) => {
-                let resultado = '';
-                
-                // Traduzindo do idioma do Windows (CP850) para o nosso amado UTF-8
-                const saidaLimpa = iconv.decode(stdout, 'cp850');
-                const erroLimpo = iconv.decode(stderr, 'cp850');
-                
-                if (error) {
-                    resultado = `[ERRO]\n${erroLimpo || error.message}\n\n`;
-                    falar('Erro no comando. Pressione Shift Tab para ler os detalhes.');
-                } else {
-                    resultado = `${saidaLimpa}\n\n`;
-                    falar('Comando finalizado. Pressione Shift Tab para ler a saída.');
-                }
-                
-                // Coloca a resposta no topo da área de texto
-                outputDiv.textContent = resultado + outputDiv.textContent;
-            });
-        }
-    });
-  </script>
+        });
+    </script>
 </body>
 </html>
