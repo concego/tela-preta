@@ -1,0 +1,45 @@
+============================================================
+                TELA PRETA - IDE ACESSÍVEL
+                     Versão 1.1.0
+============================================================
+
+IMPORTANTE: VOCÊ DEVE DESCOMPACTAR ESTE ARQUIVO!
+Não execute a IDE de dentro da pasta compactada (.zip). 
+Extraia todos os arquivos para uma pasta no seu computador 
+antes de abrir o "Tela Preta.exe".
+
+------------------------------------------------------------
+SOBRE A TELA PRETA:
+------------------------------------------------------------
+Uma IDE focada em acessibilidade, minimalismo e autonomia.
+Desenvolvido por: Anderson Carvalho
+
+------------------------------------------------------------
+ATALHOS DE GESTÃO (ARQUIVOS E PASTAS):
+------------------------------------------------------------
+Ctrl + N          : Criar novo arquivo.
+Shift + Ctrl + N  : Criar nova pasta.
+Ctrl + O          : Abrir um arquivo específico.
+Shift + Ctrl + O  : Abrir uma pasta de projeto (Workspace).
+Ctrl + S          : Salvar alterações.
+Alt + Delete      : Deletar arquivo selecionado.
+
+------------------------------------------------------------
+NAVEGAÇÃO RÁPIDA (O SEU ARSENAL):
+------------------------------------------------------------
+Alt + 1 até Alt + 0 : Alternar entre arquivos abertos.
+Alt + Backspace     : Fechar o arquivo atual.
+Alt + Seta Cima/Baixo: Navegar entre arquivos da lista.
+Alt + Seta Dir/Esq  : Navegar entre guias de pastas abertas.
+
+------------------------------------------------------------
+FERRAMENTAS E TERMINAL:
+------------------------------------------------------------
+Alt + T           : Abre a CAIXA PRETA (Terminal integrado).
+Alt + F4          : Fecha a janela atual (IDE ou Terminal).
+
+OBSERVAÇÃO SOBRE A CAIXA PRETA:
+O terminal utiliza PowerShell nativo. Devido à integração 
+profunda, o comando 'Esc' não fecha a janela do terminal; 
+utilize Alt + F4 para retornar ao editor.
+============================================================
